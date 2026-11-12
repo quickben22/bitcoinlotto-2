@@ -1,6 +1,6 @@
 # BitcoinLotto Rewrite — Implementation Status
 
-Last updated: 2026-10-23
+Last updated: 2026-11-12
 
 This document records the completed rewrite work, verification results, differences from
 `docs/REWRITE_PLAN.md`, and the remaining work needed before release.
@@ -15,7 +15,7 @@ This document records the completed rewrite work, verification results, differen
 | M1 — Project scaffold / build / tooling | Partial | New Gradle project and version catalog are in place. Hilt, Detekt, Ktlint, and CI are not implemented. |
 | M2 — Crypto | Complete | Real secp256k1 via BouncyCastle, Base58Check, WIF, P2PKH, fixtures, and vectors pass. |
 | M3 — Database / Room / Bloom / migration | Partial | Prepacked SQLite lookup and asset tests work. Room, Bloom filter, build-time DB generator, and legacy database migration are not implemented. |
-| M4 — Search engine and foreground service | Mostly complete | Sequential search, foreground service, notification, checkpoint/resume, and stop paths work. Bloom/batched lookup optimization is missing. |
+| M4 — Search engine and foreground service | Mostly complete | Sequential point addition, in-memory address-hash lookup, encrypted results and checkpoint/resume are implemented. |
 | M5 — Compose Stats and Solver | Complete | Both screens, navigation, guessed dialogs, privacy entry point, and original background are implemented. |
 | M6 — Ads / privacy / secure storage | Complete | UMP, test ads, `FLAG_SECURE`, sensitive clipboard, encrypted checkpoints, and backup exclusion are implemented. Production AdMob IDs are still required. |
 | M7 — Release candidate | Partial | R8 release build succeeds with test IDs. Signing, signed AAB, device matrix, and Play Console declarations remain. |
@@ -27,6 +27,7 @@ This document records the completed rewrite work, verification results, differen
 - Application ID: `com.quickben22.bitcoinlotto`
 - Version: `versionCode 11`, `versionName 1.0.0`
 - SDKs: `minSdk 24`, `targetSdk 36`, `compileSdk 37`
+- Install Android SDK Platform 37 through Android Studio's SDK Manager to build this project.
 - Build: AGP `9.1.1`, Kotlin `2.4.21`, Gradle `9.3.1`, Java/Kotlin target 17
 - UI: Jetpack Compose, Material 3, Navigation Compose
 - Async: Kotlin coroutines and `StateFlow`
@@ -51,7 +52,8 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Preserved the original application under `legacy/`.
 - Configured debug/release AdMob placeholders.
 - Added release R8 shrinking and resource shrinking.
-- Added a configuration-time guard that fails release builds when production AdMob IDs are absent.
+- Added a release pre-build guard that fails when production AdMob IDs are absent.
+- Use AGP's built-in Kotlin support for Android modules.
 - Added `dataExtractionRules` and disabled backup.
 
 ### 3.2 Bitcoin cryptography
@@ -69,6 +71,7 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Moved the prepacked database to `core/data/src/main/assets/blockchain.sqlite`.
 - Implemented installation of the asset into the app database directory with a version marker.
 - Implemented read-only exact address lookup against table `bitcoin(_id, value)`.
+- Build an in-memory hash160 index on first search; exact address lookups remain available.
 - Implemented row-count and fixture-address tests.
 - Current tested row count: `92,083` (including the six fixture addresses).
 - Lookup intentionally ignores the `value` column.
@@ -76,6 +79,7 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 ### 3.4 Search
 
 - Implemented sequential 32-byte private-key increment with carry.
+- Reuse the previous elliptic-curve point via point addition and compare public-key hashes without Base58 encoding on misses.
 - The starting key is checked before the first increment.
 - Both compressed and uncompressed addresses are checked.
 - Implemented stop conditions for user stop, limit reached, address found, and invalid key.
@@ -83,8 +87,9 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Implemented checkpoint persistence every two seconds and on user stop.
 - Implemented foreground `LifecycleService` with `specialUse` type.
 - Added progress notification, Stop action, notification-permission handling, and partial wake lock.
-- Added defensive `onTimeout()` handling.
+- On timeout, force a checkpoint and stop; if saving stalls, stop promptly and report that the latest progress may be unavailable.
 - Added resume from an encrypted checkpoint after process death.
+- Save found keys encrypted before removing the checkpoint; display them until dismissed and post a separate result notification.
 - Added unit tests for hit-at-start, increment distance, variants, limits, checkpoints, and misses.
 
 ### 3.5 Encrypted checkpoint storage
@@ -92,9 +97,9 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Added `SearchCheckpointStore` backed by DataStore Preferences.
 - Added versioned binary checkpoint serialization in `SearchCheckpointCodec`.
 - Added Tink AES-256-GCM encryption through an Android Keystore master key.
-- Store only Base64 ciphertext in `checkpoint_ciphertext`.
+- Store checkpoint and found-hit data as Base64 ciphertext.
 - Migrate the older plaintext DataStore keys, then remove them.
-- Treat missing, corrupted, or undecryptable ciphertext as “no checkpoint” rather than crashing.
+- Treat missing ciphertext as “no checkpoint”; report corrupt or undecryptable data instead of starting a new search.
 - Added tests for round-trip encryption, legacy migration, plaintext absence, corruption, and wrong-key handling.
 
 ### 3.6 UI
@@ -137,22 +142,16 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Clipboard entries use `ClipDescription.EXTRA_IS_SENSITIVE`.
 - Search checkpoints are encrypted at rest.
 - The service is not exported; only `MainActivity` is exported.
-- Added UMP consent on first resume and a reachable privacy-options entry point.
+- Request UMP consent once per process on activity creation, retrying after errors on a later activity creation; initialize and load ads only when UMP permits ad requests.
 - Debug builds use Google’s official test AdMob IDs; release builds require explicit IDs.
 
 ### 3.9 Tests
 
 Current unit-test suites:
 
-- `BitcoinCryptoTest` — 9 tests
-- `SearchCheckpointStoreTest` — 7 tests
-- `SqliteAddressRepositoryTest` — 3 tests
-- `CheckPrivateKeyUseCaseTest` — 6 tests
-- `SolverViewModelTest` — 9 tests
-- `StatsViewModelTest` — 4 tests
-- `SearchEngineTest` — 7 tests
-
-Total: 45 tests, 0 failures, 0 errors, 0 skipped.
+- `BitcoinCryptoTest`, `SearchCheckpointStoreTest`, and `SqliteAddressRepositoryTest`
+- `CheckPrivateKeyUseCaseTest`, `SolverViewModelTest`, and `StatsViewModelTest`
+- `SearchEngineTest`, `SearchServiceTest`, and `SearchBenchmarkTest`
 
 ---
 
@@ -164,7 +163,7 @@ Total: 45 tests, 0 failures, 0 errors, 0 skipped.
 .\gradlew.bat :core:crypto:test :core:data:testDebugUnitTest :app:testDebugUnitTest
 ```
 
-Result: all 45 tests passed.
+Run this command to verify the current unit-test suites.
 
 ### 4.2 Lint
 
@@ -233,7 +232,7 @@ updating the plan or completing the implementation.
 | Hilt + KSP | Manual `AppContainer` |
 | Room entities and DAO | Raw read-only `SQLiteDatabase` |
 | Build-time DB generator | Prebuilt `blockchain.sqlite` asset committed to the repo |
-| Bloom filter plus batched SQLite verification | Two exact SQLite lookups per generated key |
+| Bloom filter plus batched SQLite verification | In-memory hash160 index built from the read-only SQLite asset |
 | Search limit reachable from the UI | Engine/service support a limit, but Stats exposes no limit control |
 | Legacy app database migration | Not implemented; only plaintext DataStore checkpoint migration exists |
 | JDK 21 toolchain | Java/Kotlin target 17 |
@@ -244,8 +243,8 @@ updating the plan or completing the implementation.
 | `compileSdk 36` | `compileSdk 37` |
 | `.gradle-local/` and `.tools/` ignored | Currently untracked and not ignored |
 
-The current search path is functionally correct but likely slower than the planned Bloom-filter
-design. No throughput benchmark has been run.
+The JVM benchmark compares the old scalar-multiplication/SQLite path with the new
+sequential-point/hash-index path. Physical-device throughput and memory usage still need measurement.
 
 ---
 
@@ -275,8 +274,8 @@ design. No throughput benchmark has been run.
 ### P1 — Correctness, performance, and release confidence
 
 1. **Resolve the database/performance gap**
-   - Decide whether to implement the planned Bloom filter and batched lookup, or formally accept and document the current SQLite-per-key approach.
-   - Add a throughput benchmark on a physical device.
+   - Measure the hash-index memory footprint and throughput on physical devices.
+   - Decide whether a Bloom filter and batched lookup would be preferable on low-memory devices.
 
 2. **Add the missing database pipeline**
    - Build-time generator that reproduces the `92,083`-row asset.

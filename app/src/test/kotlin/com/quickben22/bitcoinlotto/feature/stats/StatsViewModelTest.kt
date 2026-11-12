@@ -23,8 +23,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class StatsViewModelTest {
 
     private val stateHolder = SearchStateHolder()
@@ -73,7 +78,7 @@ class StatsViewModelTest {
     }
 
     @Test
-    fun `a checkpoint read failure falls back to a fresh random key`() = runTest {
+    fun `a checkpoint read failure reports an error instead of starting a new search`() = runTest {
         val store = mockk<SearchCheckpointStore>()
         every { store.checkpoint } returns flow { error("checkpoint unavailable") }
         val controller = RecordingController()
@@ -82,9 +87,8 @@ class StatsViewModelTest {
         viewModel.startOrStop()
         advanceUntilIdle()
 
-        assertThat(controller.starts).containsExactly(
-            RecordingController.Start(KEY_1, limit = null, resume = false),
-        )
+        assertThat(controller.starts).isEmpty()
+        assertThat(viewModel.state.value.status).isEqualTo(SearchStatus.Error)
     }
 
     @Test
@@ -108,6 +112,7 @@ class StatsViewModelTest {
     ): StatsViewModel {
         val dispatcher = StandardTestDispatcher(scheduler)
         Dispatchers.setMain(dispatcher)
+        every { store.hit } returns flowOf(null)
         return StatsViewModel(
             searchStateHolder = stateHolder,
             checkpointStore = store,

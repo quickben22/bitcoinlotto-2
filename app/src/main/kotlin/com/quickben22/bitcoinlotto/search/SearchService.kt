@@ -23,23 +23,32 @@ import com.quickben22.bitcoinlotto.MainActivity
 import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.crypto.Hex
 import com.quickben22.bitcoinlotto.data.SearchCheckpoint
+import com.quickben22.bitcoinlotto.data.SavedSearchHit
+import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SearchService : LifecycleService() {
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var searchJob: Job? = null
+    private var commandGeneration = 0L
     private var wakeLock: PowerManager.WakeLock? = null
 
     private var sessionStartKeyHex: String = ""
+    private var sessionInitialKeyHex: String = ""
     private var sessionLastKeyHex: String = ""
     private var sessionLimit: Long? = null
     private var sessionKeysChecked: Long = 0L
@@ -87,38 +96,39 @@ class SearchService : LifecycleService() {
     }
 
     private fun startSearch(startKeyHex: String?, limit: Long?, resume: Boolean) {
+        val generation = ++commandGeneration
         startForegroundNow(SearchState(status = SearchStatus.Running))
-        searchJob?.cancel()
+        val previous = searchJob
+        previous?.cancel()
         searchJob = serviceScope.launch {
-            val checkpoint = if (resume) container.checkpointStore.checkpoint.first() else null
-            val effectiveStartKeyHex = checkpoint?.nextKeyHex ?: startKeyHex
-            if (effectiveStartKeyHex == null) {
-                stopSelfSafely()
-                return@launch
+            try {
+                previous?.join()
+                val checkpoint = if (resume) container.checkpointStore.checkpoint.first() else null
+                val effectiveStartKeyHex = checkpoint?.nextKeyHex ?: startKeyHex
+                if (effectiveStartKeyHex == null) {
+                    stopSelfSafely()
+                    return@launch
+                }
+                launchSearch(
+                    startKeyHex = effectiveStartKeyHex,
+                    limit = checkpoint?.limit ?: limit,
+                    checkpoint = checkpoint,
+                    generation = generation,
+                )
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                android.util.Log.e("SearchService", "Search failed", exception)
+                container.searchState.update {
+                    it.copy(status = SearchStatus.Error, error = getString(R.string.stats_status_error))
+                }
+                finishSearch(generation)
             }
-            launchSearch(
-                startKeyHex = effectiveStartKeyHex,
-                limit = checkpoint?.limit ?: limit,
-                checkpoint = checkpoint,
-            )
         }
     }
 
     private fun resumeFromCheckpoint(): Boolean {
-        startForegroundNow(SearchState(status = SearchStatus.Running))
-        searchJob?.cancel()
-        searchJob = serviceScope.launch {
-            val checkpoint = container.checkpointStore.checkpoint.first()
-            if (checkpoint == null) {
-                stopSelfSafely()
-                return@launch
-            }
-            launchSearch(
-                startKeyHex = checkpoint.nextKeyHex,
-                limit = checkpoint.limit,
-                checkpoint = checkpoint,
-            )
-        }
+        startSearch(null, null, resume = true)
         return true
     }
 
@@ -126,6 +136,7 @@ class SearchService : LifecycleService() {
         startKeyHex: String,
         limit: Long?,
         checkpoint: SearchCheckpoint?,
+        generation: Long,
     ) {
         val startKey = try {
             Hex.decode(startKeyHex)
@@ -139,6 +150,7 @@ class SearchService : LifecycleService() {
         }
 
         sessionStartKeyHex = checkpoint?.startKeyHex ?: startKeyHex
+        sessionInitialKeyHex = startKeyHex
         sessionLastKeyHex = ""
         sessionLimit = limit
         sessionKeysChecked = checkpoint?.keysChecked ?: 0L
@@ -161,12 +173,12 @@ class SearchService : LifecycleService() {
             limit = limit,
             initialKeysChecked = sessionKeysChecked,
             initialElapsedMillis = sessionElapsedMillis,
-        ).collect { event ->
-            handleEvent(event)
+        ).flowOn(Dispatchers.Default).collect { event ->
+            handleEvent(event, generation)
         }
     }
 
-    private suspend fun handleEvent(event: SearchEvent) {
+    private suspend fun handleEvent(event: SearchEvent, generation: Long) {
         when (event) {
             is SearchEvent.Progress -> {
                 sessionKeysChecked = event.keysChecked
@@ -202,9 +214,29 @@ class SearchService : LifecycleService() {
                         elapsedMillis = event.elapsedMillis,
                     ),
                 )
-                container.searchState.update { state }
-                container.checkpointStore.clear()
-                finishSearch()
+                withContext(NonCancellable) {
+                    try {
+                        container.checkpointStore.saveHit(
+                            SavedSearchHit(
+                                privateKeyHex = event.privateKeyHex,
+                                address = event.address,
+                                compressed = event.compressed,
+                                keysChecked = event.keysChecked,
+                                elapsedMillis = event.elapsedMillis,
+                            ),
+                        )
+                    } catch (exception: Exception) {
+                        android.util.Log.e("SearchService", "Failed to save found key", exception)
+                        container.searchState.update {
+                            state.copy(status = SearchStatus.Error, error = getString(R.string.search_hit_save_error))
+                        }
+                        finishSearch(generation)
+                        return@withContext
+                    }
+                    container.searchState.update { state }
+                    postResultNotification(state)
+                    finishSearch(generation)
+                }
             }
 
             is SearchEvent.LimitReached -> {
@@ -220,29 +252,66 @@ class SearchService : LifecycleService() {
                 )
                 container.searchState.update { state }
                 container.checkpointStore.clear()
-                finishSearch()
+                postResultNotification(state)
+                finishSearch(generation)
             }
 
             is SearchEvent.InvalidKey -> {
                 container.searchState.update {
-                    it.copy(status = SearchStatus.InvalidKey, error = event.reason)
+                    it.copy(status = SearchStatus.InvalidKey, error = getString(event.reason))
                 }
                 container.checkpointStore.clear()
-                finishSearch()
+                finishSearch(generation)
             }
         }
     }
 
-    private fun stopSearch(userStopped: Boolean) {
+    private fun stopSearch(userStopped: Boolean, timedOut: Boolean = false) {
+        val generation = ++commandGeneration
         val job = searchJob
         searchJob = null
         job?.cancel()
-        serviceScope.launch {
-            if (userStopped && sessionStartKeyHex.isNotEmpty()) {
-                maybePersistCheckpoint(force = true)
-                container.searchState.update { it.copy(status = SearchStatus.Stopped) }
+        val timeoutWatchdog = if (timedOut) serviceScope.launch {
+            delay(TIMEOUT_STOP_DEADLINE_MILLIS)
+            if (generation == commandGeneration) {
+                ++commandGeneration
+                android.util.Log.e("SearchService", "Timed out while saving search progress")
+                container.searchState.update {
+                    it.copy(status = SearchStatus.Error, errorMessage = R.string.search_timeout_save_error)
+                }
+                stopSelfSafely()
             }
-            stopSelfSafely()
+        } else null
+        serviceScope.launch {
+            try {
+                job?.join()
+                if (generation != commandGeneration || searchJob != null) return@launch
+                if (userStopped && sessionStartKeyHex.isNotEmpty() &&
+                    container.searchState.state.value.hit == null
+                ) {
+                    try {
+                        maybePersistCheckpoint(force = true)
+                        if (generation != commandGeneration) return@launch
+                        container.searchState.update {
+                            it.copy(
+                                status = SearchStatus.Stopped,
+                                error = if (timedOut) getString(R.string.search_timeout) else null,
+                            )
+                        }
+                    } catch (exception: CancellationException) {
+                        throw exception
+                    } catch (exception: Exception) {
+                        if (generation != commandGeneration) return@launch
+                        android.util.Log.e("SearchService", "Failed to save checkpoint", exception)
+                        container.searchState.update {
+                            it.copy(status = SearchStatus.Error, errorMessage = R.string.search_saved_data_error)
+                        }
+                    }
+                }
+                stopSelfSafely()
+            } finally {
+                timeoutWatchdog?.cancel()
+            }
         }
     }
 
@@ -261,7 +330,7 @@ class SearchService : LifecycleService() {
         lastCheckpointAt = now
 
         val nextKeyHex = if (sessionLastKeyHex.isEmpty()) {
-            sessionStartKeyHex
+            sessionInitialKeyHex
         } else {
             val nextKey = try {
                 Hex.decode(sessionLastKeyHex)
@@ -313,16 +382,15 @@ class SearchService : LifecycleService() {
         )
     }
 
-    private fun finishSearch() {
+    private fun finishSearch(generation: Long) {
+        if (generation != commandGeneration) return
         releaseWakeLock()
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
     private fun stopSelfSafely() {
-        releaseWakeLock()
-        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-        stopSelf()
+        finishSearch(commandGeneration)
     }
 
     private fun acquireWakeLock() {
@@ -356,6 +424,31 @@ class SearchService : LifecycleService() {
             setShowBadge(false)
         }
         manager.createNotificationChannel(channel)
+        manager.createNotificationChannel(
+            NotificationChannel(
+                RESULT_CHANNEL_ID,
+                getString(R.string.search_result_channel),
+                NotificationManager.IMPORTANCE_HIGH,
+            ),
+        )
+    }
+
+    private fun postResultNotification(state: SearchState) {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) return
+        val title = if (state.hit != null) R.string.search_notification_hit else R.string.search_notification_complete
+        val text = state.hit?.address ?: getString(R.string.search_notification_complete)
+        val notification = NotificationCompat.Builder(this, RESULT_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(getString(title))
+            .setContentText(text)
+            .setContentIntent(contentPendingIntent())
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+        NotificationManagerCompat.from(this).notify(RESULT_NOTIFICATION_ID, notification)
     }
 
     private fun buildNotification(state: SearchState): Notification {
@@ -373,7 +466,7 @@ class SearchService : LifecycleService() {
             state.error != null -> state.error
             else -> getString(
                 R.string.search_notification_progress,
-                state.keysChecked,
+                NumberFormat.getIntegerInstance().format(state.keysChecked),
                 formatSpeed(state.keysPerSecond),
             )
         }
@@ -389,7 +482,7 @@ class SearchService : LifecycleService() {
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .setColor(0xFFB3FFFF.toInt())
+            .setColor(ContextCompat.getColor(this, R.color.search_notification_accent))
             .addAction(0, getString(R.string.notification_stop), stopPendingIntent())
             .build()
     }
@@ -417,19 +510,13 @@ class SearchService : LifecycleService() {
     }
 
     private fun formatSpeed(keysPerSecond: Double): String =
-        String.format(Locale.US, "%.0f", keysPerSecond)
+        String.format(Locale.getDefault(), "%.0f", keysPerSecond)
 
     private fun keysPerSecond(keysChecked: Long, elapsedMillis: Long): Double =
         if (elapsedMillis <= 0L) 0.0 else keysChecked * 1_000.0 / elapsedMillis
 
     override fun onTimeout(startId: Int, fgsType: Int) {
-        container.searchState.update {
-            it.copy(status = SearchStatus.Error, error = getString(R.string.search_timeout))
-        }
-        searchJob?.cancel()
-        releaseWakeLock()
-        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-        stopSelf(startId)
+        stopSearch(userStopped = true, timedOut = true)
     }
 
     override fun onDestroy() {
@@ -447,7 +534,10 @@ class SearchService : LifecycleService() {
         const val EXTRA_RESUME = "resume"
 
         private const val CHANNEL_ID = "search"
+        private const val RESULT_CHANNEL_ID = "search_result"
         private const val NOTIFICATION_ID = 1001
+        private const val RESULT_NOTIFICATION_ID = 1002
+        private const val TIMEOUT_STOP_DEADLINE_MILLIS = 2_500L
         private const val CHECKPOINT_INTERVAL_MILLIS = 2_000L
         private const val NOTIFICATION_INTERVAL_MILLIS = 250L
         private const val REQUEST_CONTENT = 0

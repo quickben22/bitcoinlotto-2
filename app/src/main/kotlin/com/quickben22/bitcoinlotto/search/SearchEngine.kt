@@ -1,6 +1,7 @@
 package com.quickben22.bitcoinlotto.search
 
-import com.quickben22.bitcoinlotto.crypto.BitcoinKey
+import androidx.annotation.StringRes
+import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.crypto.Hex
 import com.quickben22.bitcoinlotto.crypto.Secp256k1
 import kotlinx.coroutines.currentCoroutineContext
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.flow
 sealed interface SearchEvent {
     data class Progress(
         val keysChecked: Long,
-        val increments: Long,
         val lastKeyHex: String,
         val elapsedMillis: Long,
         val keysPerSecond: Double,
@@ -22,7 +22,6 @@ sealed interface SearchEvent {
         val address: String,
         val compressed: Boolean,
         val keysChecked: Long,
-        val increments: Long,
         val elapsedMillis: Long,
     ) : SearchEvent
 
@@ -32,7 +31,7 @@ sealed interface SearchEvent {
         val elapsedMillis: Long,
     ) : SearchEvent
 
-    data class InvalidKey(val reason: String) : SearchEvent
+    data class InvalidKey(@StringRes val reason: Int) : SearchEvent
 }
 
 fun interface ElapsedTimeSource {
@@ -52,11 +51,12 @@ class SearchEngine(
     ): Flow<SearchEvent> = flow {
         require(startKey.size == 32) { "Start key must be 32 bytes" }
         if (!Secp256k1.isValidPrivateKey(startKey)) {
-            emit(SearchEvent.InvalidKey("Start key is outside the valid secp256k1 range"))
+            emit(SearchEvent.InvalidKey(R.string.search_start_key_range_error))
             return@flow
         }
 
         val key = startKey.copyOf()
+        val publicKeys = Secp256k1.sequentialPublicKeys(key)
         var keysChecked = initialKeysChecked
         var lastKeyHex = Hex.encode(key)
         val startedAt = timeSource.elapsedMillis()
@@ -74,18 +74,16 @@ class SearchEngine(
                 return@flow
             }
 
-            val bitcoinKey = BitcoinKey.fromPrivateKey(key)
             keysChecked++
-            lastKeyHex = bitcoinKey.privateKeyHex
-            val match = addressChecker.match(bitcoinKey)
+            lastKeyHex = Hex.encode(key)
+            val match = addressChecker.matchPublicKeys(key, publicKeys.encoded(true), publicKeys.encoded(false))
             if (match != null) {
                 emit(
                     SearchEvent.Found(
-                        privateKeyHex = bitcoinKey.privateKeyHex,
+                        privateKeyHex = lastKeyHex,
                         address = match.address,
                         compressed = match.compressed,
                         keysChecked = keysChecked,
-                        increments = keysChecked - 1,
                         elapsedMillis = elapsed(initialElapsedMillis, startedAt),
                     ),
                 )
@@ -98,7 +96,6 @@ class SearchEngine(
                 emit(
                     SearchEvent.Progress(
                         keysChecked = keysChecked,
-                        increments = keysChecked - 1,
                         lastKeyHex = lastKeyHex,
                         elapsedMillis = elapsedMillis,
                         keysPerSecond = keysPerSecond(keysChecked, elapsedMillis),
@@ -107,12 +104,9 @@ class SearchEngine(
                 lastProgressAt = now
             }
 
-            if (!incrementKey(key)) {
-                emit(SearchEvent.InvalidKey("Key space exhausted"))
-                return@flow
-            }
-            if (!Secp256k1.isValidPrivateKey(key)) {
-                emit(SearchEvent.InvalidKey("Next key is outside the valid secp256k1 range"))
+            if (limit != null && keysChecked >= limit) continue
+            if (!publicKeys.advance() || !incrementKey(key)) {
+                emit(SearchEvent.InvalidKey(R.string.search_key_space_exhausted))
                 return@flow
             }
             currentCoroutineContext().ensureActive()

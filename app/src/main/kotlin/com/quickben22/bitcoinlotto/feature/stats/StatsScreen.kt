@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.search.SearchState
 import com.quickben22.bitcoinlotto.search.SearchStatus
+import com.quickben22.bitcoinlotto.search.SearchHit
 import com.quickben22.bitcoinlotto.ui.components.HitDialog
 import com.quickben22.bitcoinlotto.ui.components.MonospaceValueCard
 import com.quickben22.bitcoinlotto.ui.components.StatCard
@@ -55,11 +56,14 @@ fun StatsRoute(factory: ViewModelProvider.Factory) {
     val viewModel: StatsViewModel = viewModel(factory = factory)
     val state by viewModel.state.collectAsStateWithLifecycle()
     val checkpoint by viewModel.checkpoint.collectAsStateWithLifecycle()
+    val savedHit by viewModel.hit.collectAsStateWithLifecycle()
 
     StatsScreen(
         state = state,
         hasCheckpoint = checkpoint != null,
         onStartStop = viewModel::startOrStop,
+        hit = savedHit ?: state.hit,
+        onDismissHit = viewModel::dismissHit,
     )
 }
 
@@ -68,18 +72,13 @@ fun StatsScreen(
     state: SearchState,
     hasCheckpoint: Boolean,
     onStartStop: () -> Unit,
+    hit: SearchHit?,
+    onDismissHit: () -> Unit,
 ) {
-    var dismissedHitKey by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { }
-
-    LaunchedEffect(state.status) {
-        if (state.status == SearchStatus.Running) {
-            dismissedHitKey = null
-        }
-    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -149,6 +148,7 @@ fun StatsScreen(
             Spacer(Modifier.height(24.dp))
 
             Button(
+                enabled = hit == null,
                 onClick = {
                     if (!state.isRunning &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -193,11 +193,10 @@ fun StatsScreen(
         }
     }
 
-    val hit = state.hit
-    if (hit != null && dismissedHitKey != hit.privateKeyHex) {
+    if (hit != null) {
         HitDialog(
             hit = hit,
-            onDismiss = { dismissedHitKey = hit.privateKeyHex },
+            onDismiss = onDismissHit,
         )
     }
 }
@@ -211,9 +210,10 @@ private fun statusText(state: SearchState): String = when (state.status) {
 
     SearchStatus.Found -> stringResource(R.string.stats_status_found)
     SearchStatus.LimitReached -> stringResource(R.string.stats_status_limit)
-    SearchStatus.Stopped -> stringResource(R.string.stats_status_stopped)
+    SearchStatus.Stopped -> state.error ?: stringResource(R.string.stats_status_stopped)
     SearchStatus.InvalidKey -> state.error ?: stringResource(R.string.stats_status_stopped)
-    SearchStatus.Error -> state.error ?: stringResource(R.string.stats_status_error)
+    SearchStatus.Error -> state.errorMessage?.let { stringResource(it) }
+        ?: state.error ?: stringResource(R.string.stats_status_error)
     SearchStatus.Idle -> stringResource(R.string.stats_status_idle)
 }
 

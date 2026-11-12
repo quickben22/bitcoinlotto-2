@@ -1,6 +1,7 @@
 package com.quickben22.bitcoinlotto
 
 import android.content.Context
+import com.quickben22.bitcoinlotto.ads.AdsConsentManager
 import com.quickben22.bitcoinlotto.data.AddressRepository
 import com.quickben22.bitcoinlotto.data.SearchCheckpointStore
 import com.quickben22.bitcoinlotto.data.SqliteAddressRepository
@@ -23,9 +24,11 @@ class AppContainer(context: Context) {
 
     val searchState: SearchStateHolder = SearchStateHolder()
 
-    val checkPrivateKey: CheckPrivateKeyUseCase by lazy { CheckPrivateKeyUseCase(addressRepository) }
+    val adsConsentManager: AdsConsentManager by lazy { AdsConsentManager(appContext) }
 
-    val addressChecker: AddressChecker by lazy { RepositoryAddressChecker(addressRepository) }
+    val checkPrivateKey: CheckPrivateKeyUseCase by lazy { CheckPrivateKeyUseCase { addressRepository } }
+
+    val addressChecker: AddressChecker by lazy { RepositoryAddressChecker { addressRepository } }
 
     val searchEngine: SearchEngine by lazy { SearchEngine(addressChecker) }
 

@@ -3,11 +3,34 @@ package com.quickben22.bitcoinlotto.data
 import android.content.Context
 import android.database.DatabaseUtils
 import android.database.sqlite.SQLiteDatabase
+import com.quickben22.bitcoinlotto.crypto.BitcoinAddress
+import com.quickben22.bitcoinlotto.crypto.hash160
 import java.io.File
 
 class SqliteAddressRepository private constructor(
     private val database: SQLiteDatabase,
 ) : AddressRepository {
+    private class HashKey(private val bytes: ByteArray) {
+        override fun equals(other: Any?): Boolean = other is HashKey && bytes.contentEquals(other.bytes)
+        override fun hashCode(): Int = bytes.contentHashCode()
+    }
+
+    private val addressHashes: Set<HashKey> by lazy {
+        val hashes = HashSet<HashKey>()
+        database.rawQuery("SELECT _id FROM bitcoin", null).use { cursor ->
+            while (cursor.moveToNext()) {
+                val address = cursor.getString(0)
+                val hash = requireNotNull(BitcoinAddress.decodeP2pkh(address)) {
+                    "Address database contains an invalid P2PKH address"
+                }
+                hashes.add(HashKey(hash))
+            }
+        }
+        hashes
+    }
+
+    override fun containsPublicKey(publicKey: ByteArray): Boolean =
+        addressHashes.contains(HashKey(hash160(publicKey)))
 
     override fun contains(address: String): Boolean {
         database.rawQuery(
@@ -67,6 +90,7 @@ class SqliteAddressRepository private constructor(
                         input.copyTo(output)
                     }
                 }
+
                 if (databaseFile.exists() && !databaseFile.delete()) {
                     error("Could not replace the existing address database")
                 }

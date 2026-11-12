@@ -7,6 +7,31 @@ import org.junit.Test
 class BitcoinCryptoTest {
 
     @Test
+    fun `sequential points match independently derived public keys and stop at curve order`() {
+        val start = Hex.decode("0".repeat(63) + "1")
+        val sequence = Secp256k1.sequentialPublicKeys(start)
+        for (value in 1..5) {
+            val key = BitcoinKey.fromHex(value.toString(16).padStart(64, '0'))
+            assertThat(sequence.encoded(true)).isEqualTo(key.publicKeyCompressed)
+            assertThat(sequence.encoded(false)).isEqualTo(key.publicKeyUncompressed)
+            assertThat(sequence.advance()).isTrue()
+        }
+        val last = (Secp256k1.order - java.math.BigInteger.ONE).toString(16).padStart(64, '0')
+        assertThat(Secp256k1.sequentialPublicKeys(Hex.decode(last)).advance()).isFalse()
+    }
+
+    @Test
+    fun `private key access is defensive and string representations redact secrets`() {
+        val key = BitcoinKey.fromHex("0".repeat(63) + "1")
+        val originalHex = key.privateKeyHex
+        key.privateKey.fill(0)
+        assertThat(key.privateKeyHex).isEqualTo(originalHex)
+        assertThat(key.toString()).doesNotContain(originalHex)
+        val wif = Wif.decode(key.wifCompressed)
+        assertThat(wif.toString()).doesNotContain(originalHex)
+    }
+
+    @Test
     fun `key one matches known bitcoin vectors`() {
         val key = BitcoinKey.fromHex(
             "0000000000000000000000000000000000000000000000000000000000000001",
@@ -78,7 +103,6 @@ class BitcoinCryptoTest {
         ).wifCompressed
         val corrupted = valid.dropLast(1) + if (valid.last() == 'a') 'b' else 'a'
 
-        assertThat(BitcoinCrypto.isValidWif(corrupted)).isFalse()
         assertThrows(IllegalArgumentException::class.java) { BitcoinKey.fromWif(corrupted) }
     }
 
@@ -98,8 +122,8 @@ class BitcoinCryptoTest {
     fun `p2pkh addresses validate and expose hash160`() {
         val address = "1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH"
 
-        assertThat(BitcoinCrypto.isValidP2pkhAddress(address)).isTrue()
-        assertThat(BitcoinCrypto.isValidP2pkhAddress("not-an-address")).isFalse()
+        assertThat(BitcoinAddress.isP2pkh(address)).isTrue()
+        assertThat(BitcoinAddress.isP2pkh("not-an-address")).isFalse()
         assertThat(BitcoinAddress.decodeP2pkh(address)).hasLength(20)
     }
 

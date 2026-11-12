@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -20,6 +19,10 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
+    }
+
+    testFixtures {
+        enable = true
     }
 }
 
@@ -40,4 +43,5 @@ dependencies {
     testImplementation(libs.truth)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(testFixtures(project(":core:data")))
 }

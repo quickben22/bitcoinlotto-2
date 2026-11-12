@@ -26,9 +26,9 @@ import com.quickben22.bitcoinlotto.BuildConfig
 import com.quickben22.bitcoinlotto.R
 
 @Composable
-fun AdBanner(modifier: Modifier = Modifier) {
+fun AdBanner(canRequestAds: Boolean, modifier: Modifier = Modifier) {
     val adUnitId = BuildConfig.ADMOB_BANNER_UNIT_ID
-    if (adUnitId.isBlank()) {
+    if (adUnitId.isBlank() || !canRequestAds) {
         AdPlaceholder(modifier)
         return
     }

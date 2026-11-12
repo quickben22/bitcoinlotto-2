@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -98,6 +97,7 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+    testImplementation(testFixtures(project(":core:data")))
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -105,11 +105,17 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.core)
 }
 
-val releaseTaskRequested = gradle.startParameter.taskNames.any { taskName ->
-    taskName.substringAfterLast(':') in setOf("assembleRelease", "bundleRelease")
-}
-if (releaseTaskRequested) {
-    check(releaseAdmobAppId.isNotBlank() && releaseBannerUnitId.isNotBlank()) {
-        "Release builds require -PadmobAppId=<app-id> and -PadmobBannerUnitId=<unit-id>."
+val validateReleaseAdIds = tasks.register("validateReleaseAdIds") {
+    inputs.property("admobAppId", releaseAdmobAppId)
+    inputs.property("admobBannerUnitId", releaseBannerUnitId)
+    doLast {
+        val appId = inputs.properties["admobAppId"] as String
+        val bannerId = inputs.properties["admobBannerUnitId"] as String
+        check(appId.isNotBlank() && bannerId.isNotBlank()) {
+            "Release builds require -PadmobAppId=<app-id> and -PadmobBannerUnitId=<unit-id>."
+        }
     }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(validateReleaseAdIds)
 }

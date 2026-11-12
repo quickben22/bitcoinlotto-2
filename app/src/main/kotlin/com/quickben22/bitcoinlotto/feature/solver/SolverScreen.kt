@@ -1,6 +1,5 @@
 package com.quickben22.bitcoinlotto.feature.solver
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +36,6 @@ import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.ui.components.GuessedDialog
 import com.quickben22.bitcoinlotto.ui.components.InfoDialog
 import com.quickben22.bitcoinlotto.ui.components.KeyValueCard
-import com.quickben22.bitcoinlotto.ui.components.SecureScreen
 import com.quickben22.bitcoinlotto.ui.components.copySensitive
 
 @Composable
@@ -70,7 +68,6 @@ fun SolverScreen(
     onShowInfo: () -> Unit,
     onDismissInfo: () -> Unit,
 ) {
-    SecureScreen()
     val context = LocalContext.current
 
     Box(
@@ -94,7 +91,7 @@ fun SolverScreen(
                 placeholder = { Text(stringResource(R.string.solver_private_key_hint)) },
                 supportingText = {
                     Text(
-                        text = state.error ?: stringResource(
+                        text = state.error?.let { stringResource(it) } ?: stringResource(
                             R.string.solver_private_key_counter,
                             state.input.count { !it.isWhitespace() },
                         ),
@@ -191,7 +188,6 @@ fun SolverScreen(
                             compressedAddressLabel,
                             derived.compressedAddress,
                         )
-                        Toast.makeText(context, R.string.solver_copied, Toast.LENGTH_SHORT).show()
                     },
                 )
 
@@ -206,7 +202,6 @@ fun SolverScreen(
                             uncompressedAddressLabel,
                             derived.uncompressedAddress,
                         )
-                        Toast.makeText(context, R.string.solver_copied, Toast.LENGTH_SHORT).show()
                     },
                 )
 
@@ -228,7 +223,6 @@ fun SolverScreen(
                                 compressedWifLabel,
                                 derived.compressedWif,
                             )
-                            Toast.makeText(context, R.string.solver_copied, Toast.LENGTH_SHORT).show()
                         },
                     )
 
@@ -243,7 +237,6 @@ fun SolverScreen(
                                 uncompressedWifLabel,
                                 derived.uncompressedWif,
                             )
-                            Toast.makeText(context, R.string.solver_copied, Toast.LENGTH_SHORT).show()
                         },
                     )
                 }

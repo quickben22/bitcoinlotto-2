@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.quickben22.bitcoinlotto.FakeAddressRepository
 import com.quickben22.bitcoinlotto.crypto.BitcoinKey
 import com.quickben22.bitcoinlotto.crypto.Hex
+import com.quickben22.bitcoinlotto.crypto.Secp256k1
 import com.quickben22.bitcoinlotto.data.FixtureAddresses
 import java.math.BigInteger
 import kotlinx.coroutines.flow.toList
@@ -30,7 +31,6 @@ class SearchEngineTest {
         assertThat(found.address).isEqualTo(FixtureAddresses.KEY_1_COMPRESSED)
         assertThat(found.compressed).isTrue()
         assertThat(found.keysChecked).isEqualTo(1L)
-        assertThat(found.increments).isEqualTo(0L)
     }
 
     @Test
@@ -42,7 +42,6 @@ class SearchEngineTest {
         val found = events.last() as SearchEvent.Found
         assertThat(found.privateKeyHex).isEqualTo(fixture.privateKeyHex)
         assertThat(found.keysChecked).isEqualTo(4L)
-        assertThat(found.increments).isEqualTo(3L)
     }
 
     @Test
@@ -75,6 +74,16 @@ class SearchEngineTest {
     }
 
     @Test
+    fun `final valid key respects the limit before reporting key space exhaustion`() = runTest {
+        val lastKey = Hex.decode(Secp256k1.order.subtract(BigInteger.ONE).toString(16).padStart(64, '0'))
+
+        assertThat(engine(emptySet()).search(lastKey, limit = 1).toList().last())
+            .isInstanceOf(SearchEvent.LimitReached::class.java)
+        assertThat(engine(emptySet()).search(lastKey).toList().last())
+            .isInstanceOf(SearchEvent.InvalidKey::class.java)
+    }
+
+    @Test
     fun `checkpoint restart resumes at the next key without gaps`() = runTest {
         val startKey = subtract(fixture.privateKey, 5)
         val firstRun = engine(bothVariants)
@@ -96,7 +105,6 @@ class SearchEngineTest {
         val found = secondRun.last() as SearchEvent.Found
         assertThat(found.privateKeyHex).isEqualTo(fixture.privateKeyHex)
         assertThat(found.keysChecked).isEqualTo(6L)
-        assertThat(found.increments).isEqualTo(5L)
     }
 
     @Test

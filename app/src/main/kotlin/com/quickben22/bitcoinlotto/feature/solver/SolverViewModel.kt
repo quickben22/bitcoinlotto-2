@@ -1,6 +1,7 @@
 package com.quickben22.bitcoinlotto.feature.solver
 
 import androidx.lifecycle.ViewModel
+import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
 import com.quickben22.bitcoinlotto.crypto.BitcoinKey
 import com.quickben22.bitcoinlotto.crypto.Hex
@@ -11,6 +12,7 @@ import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyParseResult
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyParser
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +36,7 @@ data class GuessedResult(
 
 data class SolverUiState(
     val input: String = "",
-    val error: String? = null,
+    @StringRes val error: Int? = null,
     val derived: DerivedKey? = null,
     val guessed: GuessedResult? = null,
     val showWalletKeys: Boolean = false,
@@ -49,8 +51,10 @@ class SolverViewModel(
 
     private val mutableState = MutableStateFlow(SolverUiState())
     val state: StateFlow<SolverUiState> = mutableState.asStateFlow()
+    private var checkJob: Job? = null
 
     fun onInputChange(value: String) {
+        checkJob?.cancel()
         mutableState.update {
             it.copy(
                 input = value,
@@ -101,9 +105,11 @@ class SolverViewModel(
     }
 
     private fun check(input: String) {
-        viewModelScope.launch {
+        checkJob?.cancel()
+        checkJob = viewModelScope.launch {
             when (val result = withContext(ioDispatcher) { checkPrivateKey(input) }) {
                 is KeyCheckResult.Guessed -> mutableState.update {
+                    if (it.input != input) return@update it
                     it.copy(
                         error = null,
                         derived = result.key.toDerivedKey(),
@@ -117,6 +123,7 @@ class SolverViewModel(
                 }
 
                 is KeyCheckResult.NotGuessed -> mutableState.update {
+                    if (it.input != input) return@update it
                     it.copy(
                         error = null,
                         derived = result.key.toDerivedKey(),
@@ -126,6 +133,7 @@ class SolverViewModel(
                 }
 
                 is KeyCheckResult.Invalid -> mutableState.update {
+                    if (it.input != input) return@update it
                     it.copy(
                         error = result.reason,
                         derived = null,
@@ -138,6 +146,7 @@ class SolverViewModel(
     }
 
     private fun derive(showWalletKeys: Boolean) {
+        checkJob?.cancel()
         when (val parsed = PrivateKeyParser.parse(mutableState.value.input)) {
             is PrivateKeyParseResult.Valid -> mutableState.update {
                 it.copy(
