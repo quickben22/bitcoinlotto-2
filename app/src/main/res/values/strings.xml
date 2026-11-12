@@ -20,6 +20,15 @@
     <string name="search_notification_stopped">Search stopped</string>
     <string name="search_notification_hit">Address guessed!</string>
     <string name="search_notification_progress">%1$s keys · %2$s keys/s</string>
+    <string name="search_total_keys">Total keys searched: %1$s</string>
+    <string name="search_locked">SEARCH LOCKED</string>
+    <string name="search_lock_first">You reached 6 million searches. Watch a rewarded ad to continue up to 60 million.</string>
+    <string name="search_lock_second">You reached 60 million searches. Watch a rewarded ad to unlock unlimited searching.</string>
+    <string name="search_watch_reward">Watch ad to unlock</string>
+    <string name="search_retry_reward">Retry loading rewarded ad</string>
+    <string name="search_loading_reward">Loading rewarded ad…</string>
+    <string name="search_reward_ads_unavailable">Ads are unavailable until consent is granted</string>
+    <string name="search_unlock_required">Search paused at its rewarded-ad limit.</string>
     <string name="search_timeout">Search timed out. Tap start to resume.</string>
     <string name="search_timeout_save_error">Search timed out before the latest progress could be saved. An earlier checkpoint may still be available.</string>
     <string name="search_hit_save_error">The found key could not be saved. Copy it before closing the app.</string>
@@ -53,7 +62,7 @@
     <string name="stats_status_idle">Ready to search</string>
     <string name="stats_status_searching">Searching… %1$s keys/s</string>
     <string name="stats_status_found">Address guessed!</string>
-    <string name="stats_status_limit">Search complete</string>
+    <string name="stats_status_limit">Search paused at the current rewarded-ad limit</string>
     <string name="stats_status_stopped">Search stopped</string>
     <string name="stats_status_error">Search error</string>
     <string name="stats_resume_available">A saved search is available to resume.</string>

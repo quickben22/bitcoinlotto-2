@@ -52,6 +52,7 @@ class SearchService : LifecycleService() {
     private var sessionLastKeyHex: String = ""
     private var sessionLimit: Long? = null
     private var sessionKeysChecked: Long = 0L
+    private var sessionRecordedKeysChecked: Long = 0L
     private var sessionElapsedMillis: Long = 0L
     private var lastCheckpointAt: Long = 0L
     private var lastNotificationAt: Long = 0L
@@ -104,14 +105,29 @@ class SearchService : LifecycleService() {
             try {
                 previous?.join()
                 val checkpoint = if (resume) container.checkpointStore.checkpoint.first() else null
+                val access = container.checkpointStore.searchAccess.first()
+                if (access.isSearchLocked()) {
+                    container.searchState.update {
+                        it.copy(
+                            status = SearchStatus.LimitReached,
+                            error = getString(R.string.search_unlock_required),
+                        )
+                    }
+                    finishSearch(generation)
+                    return@launch
+                }
                 val effectiveStartKeyHex = checkpoint?.nextKeyHex ?: startKeyHex
                 if (effectiveStartKeyHex == null) {
                     stopSelfSafely()
                     return@launch
                 }
+                val initialKeysChecked = checkpoint?.keysChecked ?: 0L
+                val gateLimit = access.keysUntilNextLock()
+                    ?.let { Math.addExact(initialKeysChecked, it) }
+                val effectiveLimit = listOfNotNull(limit, gateLimit).minOrNull()
                 launchSearch(
                     startKeyHex = effectiveStartKeyHex,
-                    limit = checkpoint?.limit ?: limit,
+                    limit = effectiveLimit,
                     checkpoint = checkpoint,
                     generation = generation,
                 )
@@ -154,6 +170,7 @@ class SearchService : LifecycleService() {
         sessionLastKeyHex = ""
         sessionLimit = limit
         sessionKeysChecked = checkpoint?.keysChecked ?: 0L
+        sessionRecordedKeysChecked = sessionKeysChecked
         sessionElapsedMillis = checkpoint?.elapsedMillis ?: 0L
         lastCheckpointAt = 0L
         lastNotificationAt = 0L
@@ -224,6 +241,8 @@ class SearchService : LifecycleService() {
                                 keysChecked = event.keysChecked,
                                 elapsedMillis = event.elapsedMillis,
                             ),
+                            searchedKeysDelta = (event.keysChecked - sessionRecordedKeysChecked)
+                                .coerceAtLeast(0L),
                         )
                     } catch (exception: Exception) {
                         android.util.Log.e("SearchService", "Failed to save found key", exception)
@@ -233,6 +252,7 @@ class SearchService : LifecycleService() {
                         finishSearch(generation)
                         return@withContext
                     }
+                    sessionRecordedKeysChecked = event.keysChecked
                     container.searchState.update { state }
                     postResultNotification(state)
                     finishSearch(generation)
@@ -243,15 +263,21 @@ class SearchService : LifecycleService() {
                 sessionKeysChecked = event.keysChecked
                 sessionLastKeyHex = event.lastKeyHex
                 sessionElapsedMillis = event.elapsedMillis
+                maybePersistCheckpoint(force = true)
+                val lockMessage = if (container.checkpointStore.searchAccess.first().isSearchLocked()) {
+                    getString(R.string.search_unlock_required)
+                } else {
+                    null
+                }
                 val state = SearchState(
                     status = SearchStatus.LimitReached,
                     keysChecked = event.keysChecked,
                     elapsedMillis = event.elapsedMillis,
                     keysPerSecond = keysPerSecond(event.keysChecked, event.elapsedMillis),
                     lastKeyHex = event.lastKeyHex,
+                    error = lockMessage,
                 )
                 container.searchState.update { state }
-                container.checkpointStore.clear()
                 postResultNotification(state)
                 finishSearch(generation)
             }
@@ -341,6 +367,7 @@ class SearchService : LifecycleService() {
             Hex.encode(nextKey)
         }
 
+        val searchedKeysDelta = (sessionKeysChecked - sessionRecordedKeysChecked).coerceAtLeast(0L)
         container.checkpointStore.save(
             SearchCheckpoint(
                 keysChecked = sessionKeysChecked,
@@ -349,7 +376,9 @@ class SearchService : LifecycleService() {
                 startKeyHex = sessionStartKeyHex,
                 limit = sessionLimit,
             ),
+            searchedKeysDelta = searchedKeysDelta,
         )
+        sessionRecordedKeysChecked = sessionKeysChecked
     }
 
     private fun maybeUpdateNotification(state: SearchState) {
@@ -439,7 +468,7 @@ class SearchService : LifecycleService() {
             PackageManager.PERMISSION_GRANTED
         ) return
         val title = if (state.hit != null) R.string.search_notification_hit else R.string.search_notification_complete
-        val text = state.hit?.address ?: getString(R.string.search_notification_complete)
+        val text = state.hit?.address ?: state.error ?: getString(R.string.search_notification_complete)
         val notification = NotificationCompat.Builder(this, RESULT_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(title))

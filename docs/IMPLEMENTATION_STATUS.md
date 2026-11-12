@@ -15,10 +15,10 @@ This document records the completed rewrite work, verification results, differen
 | M1 — Project scaffold / build / tooling | Partial | New Gradle project and version catalog are in place. Hilt, Detekt, Ktlint, and CI are not implemented. |
 | M2 — Crypto | Complete | Real secp256k1 via BouncyCastle, Base58Check, WIF, P2PKH, fixtures, and vectors pass. |
 | M3 — Database / Room / Bloom / migration | Partial | Prepacked SQLite lookup and asset tests work. Room, Bloom filter, build-time DB generator, and legacy database migration are not implemented. |
-| M4 — Search engine and foreground service | Mostly complete | Sequential point addition, in-memory address-hash lookup, encrypted results and checkpoint/resume are implemented. |
+| M4 — Search engine and foreground service | Mostly complete | Sequential point addition, in-memory address-hash lookup, encrypted results and checkpoint/resume are implemented. Search access uses rewarded-ad gates at 6M and 60M cumulative keys. |
 | M5 — Compose Stats and Solver | Complete | Both screens, navigation, guessed dialogs, privacy entry point, and original background are implemented. |
-| M6 — Ads / privacy / secure storage | Complete | UMP, test ads, `FLAG_SECURE`, sensitive clipboard, encrypted checkpoints, and backup exclusion are implemented. Production AdMob IDs are still required. |
-| M7 — Release candidate | Partial | R8 release build succeeds with test IDs. Signing, signed AAB, device matrix, and Play Console declarations remain. |
+| M6 — Ads / privacy / secure storage | Complete | UMP, test ads, production AdMob IDs, `FLAG_SECURE`, sensitive clipboard, encrypted checkpoints, and backup exclusion are implemented. |
+| M7 — Release candidate | Partial | R8 release build is configured with production ad-unit IDs. Signing, signed AAB, device matrix, and Play Console declarations remain. |
 
 ---
 
@@ -83,6 +83,7 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - The starting key is checked before the first increment.
 - Both compressed and uncompressed addresses are checked.
 - Implemented stop conditions for user stop, limit reached, address found, and invalid key.
+- Track cumulative searched keys; pause at 6 million until a rewarded ad is earned, pause again at 60 million, then unlock permanently after a second rewarded ad.
 - Implemented conflated progress updates at roughly 4 Hz.
 - Implemented checkpoint persistence every two seconds and on user stop.
 - Implemented foreground `LifecycleService` with `specialUse` type.
@@ -143,7 +144,8 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Search checkpoints are encrypted at rest.
 - The service is not exported; only `MainActivity` is exported.
 - Request UMP consent once per process on activity creation, retrying after errors on a later activity creation; initialize and load ads only when UMP permits ad requests.
-- Debug builds use Google’s official test AdMob IDs; release builds require explicit IDs.
+- Debug builds use Google's official test AdMob IDs; release builds use the Play-linked app ID `ca-app-pub-3535032153893847~2306137168`, banner unit `ca-app-pub-3535032153893847/3541547263`, and rewarded unit `ca-app-pub-3535032153893847/3485706949`. Gradle properties can override these defaults.
+- AdMob app IDs use `~`; banner and rewarded ad-unit IDs use `/`. The submitted `...~2319490240` value is an app ID and is not used as an ad unit.
 
 ### 3.9 Tests
 
@@ -257,8 +259,7 @@ sequential-point/hash-index path. Physical-device throughput and memory usage st
    - Produce a signed AAB.
    - Verify the upgrade path from the legacy app with the same application ID and upload key.
 
-2. **Provide production AdMob IDs**
-   - Set `admobAppId` and `admobBannerUnitId`.
+2. **Verify production AdMob configuration**
    - Build a release artifact and confirm no Google test IDs remain.
 
 3. **Complete M0**
@@ -314,7 +315,7 @@ sequential-point/hash-index path. Physical-device throughput and memory usage st
 ## 7. Suggested Next Steps
 
 1. Review this document with the project owner and decide whether to update the plan or close the implementation gaps.
-2. Obtain the upload keystore and production AdMob IDs.
+2. Obtain the upload keystore.
 3. Add signing and produce the first signed AAB.
 4. Run the local device gate and the manual release checklist.
 5. Complete the Play Console declarations.

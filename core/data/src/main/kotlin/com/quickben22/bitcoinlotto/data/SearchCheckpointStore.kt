@@ -9,6 +9,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -22,6 +23,9 @@ private val Context.searchCheckpointDataStore by preferencesDataStore(name = "se
 
 internal val CHECKPOINT_CIPHERTEXT_KEY = stringPreferencesKey("checkpoint_ciphertext")
 internal val HIT_CIPHERTEXT_KEY = stringPreferencesKey("hit_ciphertext")
+private val TOTAL_KEYS_CHECKED_KEY = longPreferencesKey("total_keys_checked")
+private val FIRST_REWARD_USED_KEY = booleanPreferencesKey("first_reward_used")
+private val PERMANENT_UNLOCK_KEY = booleanPreferencesKey("permanent_unlock")
 
 class SearchCheckpointStore(
     private val dataStore: DataStore<Preferences>,
@@ -62,7 +66,27 @@ class SearchCheckpointStore(
         }
     }
 
-    suspend fun saveHit(hit: SavedSearchHit) {
+    val searchAccess: Flow<SearchAccess> = dataStore.data.map { preferences ->
+        SearchAccess(
+            totalKeysChecked = (preferences[TOTAL_KEYS_CHECKED_KEY] ?: 0L).coerceAtLeast(0L),
+            firstRewardUsed = preferences[FIRST_REWARD_USED_KEY] ?: false,
+            permanentlyUnlocked = preferences[PERMANENT_UNLOCK_KEY] ?: false,
+        )
+    }
+
+    suspend fun grantRewardedUnlock() {
+        dataStore.edit { preferences ->
+            if (preferences[PERMANENT_UNLOCK_KEY] == true) return@edit
+            if (preferences[FIRST_REWARD_USED_KEY] != true) {
+                preferences[FIRST_REWARD_USED_KEY] = true
+            } else {
+                preferences[PERMANENT_UNLOCK_KEY] = true
+            }
+        }
+    }
+
+    suspend fun saveHit(hit: SavedSearchHit, searchedKeysDelta: Long = 0L) {
+        require(searchedKeysDelta >= 0L) { "Searched key count cannot be negative" }
         val plaintext = ByteArrayOutputStream().use { bytes ->
             DataOutputStream(bytes).use { output ->
                 output.writeByte(1)
@@ -78,6 +102,10 @@ class SearchCheckpointStore(
         dataStore.edit { preferences ->
             preferences[HIT_CIPHERTEXT_KEY] = encoded
             preferences.remove(CHECKPOINT_CIPHERTEXT_KEY)
+            if (searchedKeysDelta > 0L) {
+                val current = (preferences[TOTAL_KEYS_CHECKED_KEY] ?: 0L).coerceAtLeast(0L)
+                preferences[TOTAL_KEYS_CHECKED_KEY] = Math.addExact(current, searchedKeysDelta)
+            }
         }
     }
 
@@ -85,7 +113,8 @@ class SearchCheckpointStore(
         dataStore.edit { preferences -> preferences.remove(HIT_CIPHERTEXT_KEY) }
     }
 
-    suspend fun save(checkpoint: SearchCheckpoint) {
+    suspend fun save(checkpoint: SearchCheckpoint, searchedKeysDelta: Long = 0L) {
+        require(searchedKeysDelta >= 0L) { "Searched key count cannot be negative" }
         val ciphertext = cipher.encrypt(SearchCheckpointCodec.encode(checkpoint))
         val encoded = Base64.encodeToString(ciphertext, Base64.NO_WRAP)
         dataStore.edit { preferences ->
@@ -95,6 +124,10 @@ class SearchCheckpointStore(
             preferences.remove(LEGACY_ELAPSED_MILLIS)
             preferences.remove(LEGACY_START_KEY)
             preferences.remove(LEGACY_LIMIT)
+            if (searchedKeysDelta > 0L) {
+                val current = (preferences[TOTAL_KEYS_CHECKED_KEY] ?: 0L).coerceAtLeast(0L)
+                preferences[TOTAL_KEYS_CHECKED_KEY] = Math.addExact(current, searchedKeysDelta)
+            }
         }
     }
 

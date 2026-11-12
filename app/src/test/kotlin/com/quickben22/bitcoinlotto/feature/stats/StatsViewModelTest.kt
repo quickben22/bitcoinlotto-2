@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.quickben22.bitcoinlotto.crypto.Hex
 import com.quickben22.bitcoinlotto.data.SearchCheckpoint
 import com.quickben22.bitcoinlotto.data.SearchCheckpointStore
+import com.quickben22.bitcoinlotto.data.SearchAccess
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyGenerator
 import com.quickben22.bitcoinlotto.search.SearchController
 import com.quickben22.bitcoinlotto.search.SearchStateHolder
@@ -57,7 +58,7 @@ class StatsViewModelTest {
         advanceUntilIdle()
 
         assertThat(controller.starts).containsExactly(
-            RecordingController.Start("ab", 10L, resume = true),
+            RecordingController.Start("ab", null, resume = true),
         )
         assertThat(controller.stops).isEqualTo(0)
     }
@@ -113,6 +114,7 @@ class StatsViewModelTest {
         val dispatcher = StandardTestDispatcher(scheduler)
         Dispatchers.setMain(dispatcher)
         every { store.hit } returns flowOf(null)
+        every { store.searchAccess } returns flowOf(SearchAccess())
         return StatsViewModel(
             searchStateHolder = stateHolder,
             checkpointStore = store,

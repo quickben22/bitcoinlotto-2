@@ -64,10 +64,11 @@ class SearchCheckpointStoreTest {
         val hit = SavedSearchHit(checkpoint().nextKeyHex, "address", true, 42L, 1500L)
         store.save(checkpoint())
 
-        store.saveHit(hit)
+        store.saveHit(hit, searchedKeysDelta = 42L)
 
         assertThat(store.checkpoint.first()).isNull()
         assertThat(store.hit.first()).isEqualTo(hit)
+        assertThat(store.searchAccess.first().totalKeysChecked).isEqualTo(42L)
         assertThat(dataStore.data.first().asMap().values).doesNotContain(hit.privateKeyHex)
         store.clear()
         assertThat(store.hit.first()).isEqualTo(hit)
@@ -87,24 +88,6 @@ class SearchCheckpointStoreTest {
             preferences[longPreferencesKey("limit")] = legacy.limit ?: -1L
         }
 
-        @Test
-        fun `failed legacy migration preserves original checkpoint`() = runTest {
-            val dataStore = createDataStore()
-            val legacy = checkpoint()
-            dataStore.edit { preferences ->
-                preferences[stringPreferencesKey("next_key")] = legacy.nextKeyHex
-                preferences[stringPreferencesKey("start_key")] = legacy.startKeyHex
-            }
-            val failingCipher = object : CheckpointCipher {
-                override fun encrypt(plaintext: ByteArray): ByteArray = error("encryption unavailable")
-                override fun decrypt(ciphertext: ByteArray): ByteArray = error("decryption unavailable")
-            }
-
-            assertThat(runCatching { SearchCheckpointStore(dataStore, failingCipher).checkpoint.first() }.isFailure).isTrue()
-            val preferences = dataStore.data.first()
-            assertThat(preferences[stringPreferencesKey("next_key")]).isEqualTo(legacy.nextKeyHex)
-            assertThat(preferences[stringPreferencesKey("start_key")]).isEqualTo(legacy.startKeyHex)
-        }
         val store = SearchCheckpointStore(dataStore, createCipher())
 
         assertThat(store.checkpoint.first()).isEqualTo(legacy)
@@ -113,6 +96,25 @@ class SearchCheckpointStoreTest {
         assertThat(preferences[CHECKPOINT_CIPHERTEXT_KEY]).isNotNull()
         assertThat(preferences[stringPreferencesKey("next_key")]).isNull()
         assertThat(preferences[stringPreferencesKey("start_key")]).isNull()
+    }
+
+    @Test
+    fun `failed legacy migration preserves original checkpoint`() = runTest {
+        val dataStore = createDataStore()
+        val legacy = checkpoint()
+        dataStore.edit { preferences ->
+            preferences[stringPreferencesKey("next_key")] = legacy.nextKeyHex
+            preferences[stringPreferencesKey("start_key")] = legacy.startKeyHex
+        }
+        val failingCipher = object : CheckpointCipher {
+            override fun encrypt(plaintext: ByteArray): ByteArray = error("encryption unavailable")
+            override fun decrypt(ciphertext: ByteArray): ByteArray = error("decryption unavailable")
+        }
+
+        assertThat(runCatching { SearchCheckpointStore(dataStore, failingCipher).checkpoint.first() }.isFailure).isTrue()
+        val preferences = dataStore.data.first()
+        assertThat(preferences[stringPreferencesKey("next_key")]).isEqualTo(legacy.nextKeyHex)
+        assertThat(preferences[stringPreferencesKey("start_key")]).isEqualTo(legacy.startKeyHex)
     }
 
     @Test

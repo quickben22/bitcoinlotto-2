@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,9 +41,14 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.quickben22.bitcoinlotto.R
+import com.quickben22.bitcoinlotto.BitcoinLottoApp
+import com.quickben22.bitcoinlotto.ads.RewardedAdState
+import com.quickben22.bitcoinlotto.data.SearchAccess
 import com.quickben22.bitcoinlotto.search.SearchState
 import com.quickben22.bitcoinlotto.search.SearchStatus
+import com.quickben22.bitcoinlotto.search.isSearchLocked
 import com.quickben22.bitcoinlotto.search.SearchHit
+import com.quickben22.bitcoinlotto.ui.components.findActivity
 import com.quickben22.bitcoinlotto.ui.components.HitDialog
 import com.quickben22.bitcoinlotto.ui.components.MonospaceValueCard
 import com.quickben22.bitcoinlotto.ui.components.StatCard
@@ -57,11 +63,33 @@ fun StatsRoute(factory: ViewModelProvider.Factory) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val checkpoint by viewModel.checkpoint.collectAsStateWithLifecycle()
     val savedHit by viewModel.hit.collectAsStateWithLifecycle()
+    val access by viewModel.access.collectAsStateWithLifecycle()
+    val app = LocalContext.current.applicationContext as BitcoinLottoApp
+    val rewardedAdManager = remember(app) { app.container.rewardedAdManager }
+    val rewardedAdState by rewardedAdManager.state.collectAsStateWithLifecycle()
+    val canRequestAds by app.container.adsConsentManager.adRequestsAllowed.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val locked = access.isSearchLocked()
+
+    LaunchedEffect(locked, canRequestAds, rewardedAdState) {
+        if (locked && canRequestAds && rewardedAdState == RewardedAdState.Idle) {
+            rewardedAdManager.load()
+        }
+    }
 
     StatsScreen(
         state = state,
         hasCheckpoint = checkpoint != null,
+        access = access,
+        rewardedAdState = rewardedAdState,
+        canRequestAds = canRequestAds,
         onStartStop = viewModel::startOrStop,
+        onWatchRewardedAd = {
+            context.findActivity()?.let { activity ->
+                rewardedAdManager.show(activity, viewModel::onRewardEarned)
+            }
+        },
+        onRetryRewardedAd = rewardedAdManager::load,
         hit = savedHit ?: state.hit,
         onDismissHit = viewModel::dismissHit,
     )
@@ -71,7 +99,12 @@ fun StatsRoute(factory: ViewModelProvider.Factory) {
 fun StatsScreen(
     state: SearchState,
     hasCheckpoint: Boolean,
+    access: SearchAccess,
+    rewardedAdState: RewardedAdState,
+    canRequestAds: Boolean,
     onStartStop: () -> Unit,
+    onWatchRewardedAd: () -> Unit,
+    onRetryRewardedAd: () -> Unit,
     hit: SearchHit?,
     onDismissHit: () -> Unit,
 ) {
@@ -135,6 +168,30 @@ fun StatsScreen(
                 textAlign = TextAlign.Center,
             )
 
+            Text(
+                text = stringResource(R.string.search_total_keys, formatCount(access.totalKeysChecked)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            if (access.isSearchLocked()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(
+                        if (access.firstRewardUsed) {
+                            R.string.search_lock_second
+                        } else {
+                            R.string.search_lock_first
+                        },
+                        formatCount(access.totalKeysChecked),
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
             if (hasCheckpoint && !state.isRunning) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -148,7 +205,7 @@ fun StatsScreen(
             Spacer(Modifier.height(24.dp))
 
             Button(
-                enabled = hit == null,
+                enabled = hit == null && (state.isRunning || !access.isSearchLocked()),
                 onClick = {
                     if (!state.isRunning &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -182,11 +239,41 @@ fun StatsScreen(
                 Text(
                     text = if (state.isRunning) {
                         stringResource(R.string.stop_search)
+                    } else if (access.isSearchLocked()) {
+                        stringResource(R.string.search_locked)
                     } else {
                         stringResource(R.string.start_search)
                     },
                     style = MaterialTheme.typography.titleMedium,
                 )
+            }
+
+            if (access.isSearchLocked()) {
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    enabled = canRequestAds && rewardedAdState in
+                        setOf(RewardedAdState.Ready, RewardedAdState.Failed),
+                    onClick = {
+                        if (rewardedAdState == RewardedAdState.Failed) {
+                            onRetryRewardedAd()
+                        } else {
+                            onWatchRewardedAd()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            when {
+                                !canRequestAds -> R.string.search_reward_ads_unavailable
+                                rewardedAdState == RewardedAdState.Ready -> R.string.search_watch_reward
+                                rewardedAdState == RewardedAdState.Failed -> R.string.search_retry_reward
+                                else -> R.string.search_loading_reward
+                            },
+                        ),
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -209,7 +296,7 @@ private fun statusText(state: SearchState): String = when (state.status) {
     )
 
     SearchStatus.Found -> stringResource(R.string.stats_status_found)
-    SearchStatus.LimitReached -> stringResource(R.string.stats_status_limit)
+    SearchStatus.LimitReached -> state.error ?: stringResource(R.string.stats_status_limit)
     SearchStatus.Stopped -> state.error ?: stringResource(R.string.stats_status_stopped)
     SearchStatus.InvalidKey -> state.error ?: stringResource(R.string.stats_status_stopped)
     SearchStatus.Error -> state.errorMessage?.let { stringResource(it) }
