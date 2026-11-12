@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Zombie Bitcoins — an audit of 92,083 dormant addresses</title>
+<meta name="description" content="A forensic audit of 92,083 Bitcoin addresses presumed lost: 2,256,803 BTC is still sitting untouched in 82,086 zombie addresses, while 245,285 BTC proved the presumption wrong.">
+<style>
+  :root{
+    --bg:#0b0a0e;
+    --bg-2:#100e15;
+    --panel:#14121b;
+    --panel-2:#191622;
+    --ink:#ece7dd;
+    --ink-dim:#c9c3b7;
+    --muted:#9b9488;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.18);
+    --amber:#f7931a;
+    --amber-soft:#ffb454;
+    --gold:#e7c07b;
+    --dust:#7c86e8;
+    --red:#e2574c;
+    --green:#4fbf9f;
+    --maxw:1120px;
+    --prose:70ch;
+    --r:16px;
+    --shadow:0 24px 60px -30px rgba(0,0,0,.9);
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{animation:none!important;transition:none!important}
+  }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 620px at 78% -10%, rgba(247,147,26,.14), transparent 62%),
+      radial-gradient(900px 500px at 6% 2%, rgba(124,134,232,.10), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:Georgia,"Iowan Old Style","Palatino Linotype",Palatino,"Times New Roman",serif;
+    font-size:18px;
+    line-height:1.72;
+    font-kerning:normal;
+    text-rendering:optimizeLegibility;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{background:rgba(247,147,26,.28);color:#fff}
+
+  a{color:var(--amber-soft);text-decoration:none;border-bottom:1px solid rgba(255,180,84,.3)}
+  a:hover{border-bottom-color:var(--amber-soft);color:#ffd098}
+
+  /* ---------- reading progress ---------- */
+  .progress-wrap{
+    position:fixed;inset:0 0 auto 0;height:3px;z-index:60;
+    background:transparent;pointer-events:none;
+  }
+  .progress{
+    height:100%;width:100%;transform:scaleX(0);transform-origin:0 50%;
+    background:linear-gradient(90deg,var(--dust),var(--amber));
+    transition:transform .08s linear;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    background:rgba(11,10,14,.72);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:var(--maxw);margin:0 auto;padding:12px 28px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;letter-spacing:.02em;color:var(--muted);
+  }
+  .brand{display:flex;align-items:center;gap:10px;color:var(--ink-dim);border:0}
+  .brand:hover{color:var(--ink)}
+  .brand .mark{
+    width:22px;height:22px;border-radius:50%;
+    display:grid;place-items:center;
+    background:linear-gradient(145deg,var(--amber),#c96f06);
+    color:#1a0f00;font-weight:700;font-size:13px;
+    box-shadow:0 0 0 1px rgba(247,147,26,.4),0 0 22px rgba(247,147,26,.35);
+  }
+  .topbar nav{display:flex;gap:18px}
+  .topbar nav a{border:0;color:var(--muted)}
+  .topbar nav a:hover{color:var(--amber-soft)}
+  @media (max-width:860px){.topbar nav{display:none}}
+
+  /* ---------- layout ---------- */
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .narrow{max-width:var(--prose)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:clamp(48px,9vw,104px) 0 clamp(28px,4vw,44px);position:relative}
+  .hero::after{
+    content:"";position:absolute;left:28px;right:28px;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--line-strong),transparent);
+  }
+  .eyebrow{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--amber);margin:0 0 22px;display:flex;align-items:center;gap:12px;
+  }
+  .eyebrow::before{content:"";width:28px;height:1px;background:var(--amber);display:inline-block}
+  h1{
+    font-size:clamp(3.2rem,9vw,6.4rem);
+    line-height:.92;
+    letter-spacing:-.035em;
+    margin:0 0 26px;
+    font-weight:600;
+    background:linear-gradient(175deg,#fff 18%,#e8dcc8 55%,#b9a98d 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .deck{
+    font-size:clamp(1.15rem,2.3vw,1.5rem);
+    line-height:1.5;color:var(--ink-dim);margin:0;max-width:48ch;
+    font-style:italic;
+  }
+  .meta{
+    margin-top:38px;display:flex;flex-wrap:wrap;gap:9px 22px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;color:var(--muted);letter-spacing:.02em;
+  }
+  .meta .dot{width:4px;height:4px;border-radius:50%;background:var(--line-strong);align-self:center}
+  .meta a{border:0;color:var(--ink-dim)}
+  .meta a:hover{color:var(--amber-soft)}
+
+  /* ---------- stat band ---------- */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+    margin:clamp(34px,5vw,56px) 0 0;box-shadow:var(--shadow);
+  }
+  .stat{
+    background:linear-gradient(180deg,rgba(25,22,34,.92),rgba(17,15,23,.92));
+    padding:22px 20px 20px;position:relative;min-width:0;
+  }
+  .stat .v{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:clamp(1.25rem,1.9vw,1.7rem);font-weight:650;letter-spacing:-.02em;
+    color:#fff;line-height:1.15;font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .stat .v .u{font-size:.58em;color:var(--muted);font-weight:500;margin-left:3px;letter-spacing:0}
+  .stat .k{
+    margin-top:8px;font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  }
+  .stat.hot .v{color:var(--amber-soft)}
+  .stat.cool .v{color:#aab2ff}
+  .stat.cold .v{color:var(--gold)}
+
+  /* ---------- toc ---------- */
+  .toc{
+    margin:clamp(34px,5vw,52px) 0 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    padding:24px 0;
+  }
+  .toc-title{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 16px;
+  }
+  .toc ol{
+    list-style:none;margin:0;padding:0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 30px;
+    counter-reset:toc;
+  }
+  .toc li{counter-increment:toc;display:flex;gap:12px;align-items:baseline}
+  .toc li::before{
+    content:counter(toc,decimal-leading-zero);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:11px;color:var(--amber);letter-spacing:.08em;flex:none;width:20px;
+  }
+  .toc a{border:0;color:var(--ink-dim);font-size:16px}
+  .toc a:hover{color:#fff}
+
+  /* ---------- sections ---------- */
+  main{padding:clamp(34px,5vw,64px) 0 0}
+  section{padding:clamp(34px,5vw,56px) 0;border-bottom:1px solid var(--line);scroll-margin-top:72px}
+  section:last-of-type{border-bottom:0}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin:0 0 26px}
+  .sec-num{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:12px;letter-spacing:.14em;color:var(--amber);
+    padding-top:.45em;flex:none;
+  }
+  h2{
+    font-size:clamp(1.75rem,3.6vw,2.55rem);
+    line-height:1.15;letter-spacing:-.02em;margin:0;font-weight:600;color:#fff;
+  }
+  h3{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:1.12rem;letter-spacing:.01em;margin:38px 0 12px;color:var(--gold);font-weight:600;
+  }
+  h3 .tag{
+    display:inline-block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);margin-right:10px;font-weight:500;
+  }
+  p{margin:0 0 1.15em}
+  strong{color:#fff;font-weight:600}
+  em{color:var(--ink-dim)}
+
+  .prose{max-width:var(--prose)}
+  #premise .prose > p:first-of-type::first-letter{
+    float:left;
+    font-size:4.05em;
+    line-height:.82;
+    padding:.08em .12em 0 0;
+    color:var(--amber);
+    font-weight:600;
+  }
+  .lede{font-size:1.16em;color:var(--ink-dim)}
+
+  /* ---------- callouts ---------- */
+  .pull{
+    margin:36px 0;
+    padding:26px 28px;
+    border-left:3px solid var(--amber);
+    background:linear-gradient(90deg,rgba(247,147,26,.07),transparent 80%);
+    border-radius:0 12px 12px 0;
+    font-size:1.22em;line-height:1.5;font-style:italic;color:var(--gold);
+  }
+  .pull p{margin:0}
+  .note{
+    margin:26px 0;
+    padding:18px 20px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14.5px;line-height:1.65;color:var(--muted);
+  }
+  .note strong{color:var(--ink-dim)}
+  .note.warn{border-color:rgba(226,87,76,.35);background:rgba(226,87,76,.06)}
+  .note.info{border-color:rgba(124,134,232,.3);background:rgba(124,134,232,.06)}
+
+  /* ---------- code / addresses ---------- */
+  code,.mono{
+    font-family:Consolas,"Cascadia Mono","SF Mono",Menlo,"Liberation Mono",monospace;
+    font-size:.86em;
+  }
+  .addr{
+    font-family:Consolas,"Cascadia Mono","SF Mono",Menlo,"Liberation Mono",monospace;
+    font-size:.84em;
+    color:var(--ink-dim);
+    background:rgba(255,255,255,.045);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:.12em .38em;
+    display:inline-block;max-width:100%;word-break:break-all;
+    cursor:copy;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  td .addr{
+    display:inline;white-space:nowrap;word-break:normal;
+  }
+  .addr:hover{background:rgba(247,147,26,.1);border-color:rgba(247,147,26,.35);color:#fff}
+  .addr:active{background:rgba(247,147,26,.2)}
+  .txhash{
+    display:block;
+    font-family:Consolas,"Cascadia Mono","SF Mono",Menlo,"Liberation Mono",monospace;
+    font-size:13px;line-height:1.6;color:var(--dust);
+    background:rgba(124,134,232,.07);
+    border:1px solid rgba(124,134,232,.22);
+    border-radius:8px;padding:12px 14px;margin:16px 0;
+    overflow-wrap:anywhere;cursor:copy;
+  }
+
+  /* ---------- figures & charts ---------- */
+  figure{
+    margin:38px 0;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    padding:26px 26px 20px;
+    box-shadow:var(--shadow);
+  }
+  figcaption{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;line-height:1.6;color:var(--muted);margin-top:16px;
+  }
+  figcaption b{color:var(--ink-dim);font-weight:600}
+  .fig-title{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 22px;
+  }
+
+  .legend{
+    display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:12.5px;color:var(--muted);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:8px}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .swatch.full{background:var(--amber)}
+  .swatch.dust{background:var(--dust)}
+
+  /* yearly bars */
+  .bars{display:flex;flex-direction:column;gap:9px}
+  .bar-row{
+    display:grid;grid-template-columns:52px 1fr 74px;align-items:center;gap:14px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;
+  }
+  .bar-year{color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.03em}
+  .bar-track{
+    display:flex;height:22px;border-radius:5px;overflow:hidden;
+    background:rgba(255,255,255,.035);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+  }
+  .bar-full,.bar-dust{
+    display:block;height:100%;
+    transition:filter .18s;
+  }
+  .bar-full{background:linear-gradient(90deg,#c96f06,var(--amber))}
+  .bar-dust{background:linear-gradient(90deg,#5c67cf,var(--dust))}
+  .bar-row:hover .bar-full,.bar-row:hover .bar-dust{filter:brightness(1.18)}
+  .bar-val{
+    text-align:right;color:var(--ink-dim);font-variant-numeric:tabular-nums;font-size:12.5px;
+  }
+  .bar-row.peak .bar-year{color:var(--amber)}
+  .bar-row.peak .bar-val{color:#fff;font-weight:600}
+
+  /* cumulative svg */
+  .svg-wrap{width:100%;overflow:hidden}
+  svg{display:block;width:100%;height:auto}
+  .grid-line{stroke:rgba(255,255,255,.07);stroke-width:1}
+  .axis-text{
+    fill:var(--muted);font-size:11px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .area{fill:url(#areaGrad)}
+  .line{fill:none;stroke:var(--amber);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+  .pt{fill:var(--bg);stroke:var(--amber);stroke-width:2}
+  .pt.hi{fill:var(--amber)}
+
+  /* ---------- tables ---------- */
+  .table-wrap{
+    margin:30px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    border:1px solid var(--line);border-radius:var(--r);
+    background:var(--panel);
+  }
+  table{
+    width:100%;border-collapse:collapse;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;font-variant-numeric:tabular-nums;
+  }
+  caption{
+    caption-side:top;text-align:left;padding:16px 18px 4px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  }
+  th{
+    text-align:left;font-weight:600;color:var(--muted);
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    padding:14px 16px;border-bottom:1px solid var(--line-strong);
+    white-space:nowrap;background:rgba(255,255,255,.02);
+  }
+  td{padding:12px 16px;border-bottom:1px solid var(--line);color:var(--ink-dim);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:rgba(255,255,255,.025);color:var(--ink)}
+  th.num,td.num{text-align:right;white-space:nowrap}
+  tfoot td{
+    font-weight:700;color:#fff;border-top:1px solid var(--line-strong);
+    background:rgba(247,147,26,.05);
+  }
+  td strong{color:#fff}
+  .rank{
+    color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;
+  }
+  .kind{
+    font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 7px;border-radius:5px;white-space:nowrap;display:inline-block;
+  }
+  .kind.dust{color:#aab2ff;background:rgba(124,134,232,.12);border:1px solid rgba(124,134,232,.25)}
+  .kind.full{color:var(--amber-soft);background:rgba(247,147,26,.1);border:1px solid rgba(247,147,26,.25)}
+.kind.part{color:var(--green);background:rgba(79,191,159,.1);border:1px solid rgba(79,191,159,.25)}
+  .table-note{
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:12.5px;color:var(--muted);margin:-14px 0 30px;padding-left:2px;
+  }
+  .hint{display:none}
+  @media (max-width:700px){
+    .hint{display:block;text-transform:none;letter-spacing:.02em;color:var(--amber);font-size:11px;margin-top:8px}
+  }
+
+  /* ---------- meaning cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin:34px 0}
+  .card{
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:attr(data-n);
+    display:block;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:11.5px;font-weight:600;letter-spacing:.22em;
+    color:var(--amber);
+    margin:0 0 14px;
+  }
+  .card h4{
+    margin:0 0 10px;font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:1.02rem;color:#fff;letter-spacing:-.01em;
+  }
+  .card p{margin:0;font-size:15px;line-height:1.65;color:var(--muted)}
+  .card p strong{color:var(--ink)}
+
+  /* ---------- lists ---------- */
+  ul.clean{list-style:none;margin:24px 0;padding:0}
+  ul.clean li{
+    position:relative;padding:14px 0 14px 30px;border-bottom:1px solid var(--line);
+    color:var(--ink-dim);
+  }
+  ul.clean li:last-child{border-bottom:0}
+  ul.clean li::before{
+    content:"";position:absolute;left:6px;top:1.42em;
+    width:7px;height:7px;border-radius:2px;
+    background:var(--amber);transform:rotate(45deg);
+  }
+  ul.clean li strong{color:#fff}
+
+  /* ---------- methodology ---------- */
+  ol.steps{
+    counter-reset:step;list-style:none;padding:0;margin:28px 0;
+  }
+  ol.steps li{
+    counter-increment:step;position:relative;padding:0 0 22px 54px;color:var(--ink-dim);
+  }
+  ol.steps li::before{
+    content:counter(step);
+    position:absolute;left:0;top:-2px;
+    width:32px;height:32px;border-radius:50%;
+    display:grid;place-items:center;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;font-weight:600;color:var(--amber);
+    background:rgba(247,147,26,.08);border:1px solid rgba(247,147,26,.3);
+  }
+  ol.steps li::after{
+    content:"";position:absolute;left:15.5px;top:34px;bottom:2px;width:1px;
+    background:linear-gradient(180deg,rgba(247,147,26,.25),transparent);
+  }
+  ol.steps li:last-child{padding-bottom:0}
+  ol.steps li:last-child::after{display:none}
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid var(--line);margin-top:40px;
+    padding:44px 0 64px;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;color:var(--muted);
+  }
+  .foot-grid{display:flex;flex-wrap:wrap;gap:26px 48px;justify-content:space-between;align-items:flex-start}
+  .foot-grid p{margin:0 0 8px;max-width:52ch;line-height:1.65}
+  .foot-sig{font-family:Georgia,serif;font-style:italic;font-size:15px;color:var(--ink-dim)}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:32px;transform:translate(-50%,20px);
+    background:var(--amber);color:#1a0f00;
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:13px;font-weight:600;letter-spacing:.01em;
+    padding:10px 18px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+    z-index:100;box-shadow:0 12px 30px -8px rgba(0,0,0,.7);
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------- reveal ---------- */
+  .js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.js .reveal{opacity:1;transform:none}}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1000px){
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+
+  @media (max-width:700px){
+    body{font-size:17px}
+    .wrap{padding:0 18px}
+    .topbar-inner{padding:10px 18px}
+    .hero::after{left:18px;right:18px}
+    .bar-row{grid-template-columns:40px 1fr 62px;gap:9px;font-size:12px}
+    .bar-val{font-size:11px}
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .stat{padding:18px 16px}
+    figure{padding:18px 16px 14px;margin:28px 0}
+    .pull{padding:20px;font-size:1.1em}
+    th,td{padding:10px 12px}
+    table{font-size:13px}
+    .sec-head{gap:10px}
+  }
+
+  @media print{
+    :root{
+      --bg:#fff;--panel:#fff;--panel-2:#fff;--ink:#111;--ink-dim:#222;--muted:#555;
+      --line:rgba(0,0,0,.14);--line-strong:rgba(0,0,0,.3);--amber:#b45f00;--gold:#7a5a12;
+      --dust:#3d47a8;--amber-soft:#8a4b00;
+    }
+    body{background:#fff;color:#111;font-size:11pt}
+    .topbar,.progress-wrap,#toast,.toc{display:none}
+    .hero{padding-top:0}
+    h1{color:#111;-webkit-text-fill-color:#111;background:none}
+    section{break-inside:auto;page-break-inside:auto}
+    figure,.table-wrap,.card,.pull{break-inside:avoid;page-break-inside:avoid;box-shadow:none}
+    .reveal{opacity:1;transform:none}
+    .js .reveal{opacity:1;transform:none}
+    a{color:#111;border:0}
+  }
+</style>
+<script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+<div class="progress-wrap" aria-hidden="true"><div class="progress" id="progress"></div></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top"><span class="mark">₿</span> Zombie Bitcoins</a>
+    <nav aria-label="Sections">
+      <a href="#ledger">Ledger</a>
+      <a href="#death">Ghosts</a>
+      <a href="#timeline">Timeline</a>
+      <a href="#july4">4 July 2025</a>
+      <a href="#events">World events</a>
+      <a href="#stayed">Zombies</a>
+      <a href="#appendix">Data</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<div class="wrap">
+
+  <!-- ================= HERO ================= -->
+  <div class="hero">
+    <p class="eyebrow">Bitcoin Key Hunter research</p>
+    <h1>Zombie<br>Bitcoins</h1>
+    <p class="deck">A forensic audit of 92,083 addresses presumed lost — 2.26 million BTC still sitting there, and 245,000 BTC that proved otherwise.</p>
+    <div class="meta">
+      <span>12 November 2026</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span>92,083 addresses audited</span>
+      <span class="dot" aria-hidden="true"></span>
+      <a href="./address-audit.csv">Full data: address-audit.csv →</a>
+    </div>
+
+    <div class="stats" role="list">
+      <div class="stat" role="listitem"><div class="v">92,083</div><div class="k">Addresses audited</div></div>
+      <div class="stat" role="listitem"><div class="v">2,530,552<span class="u">BTC</span></div><div class="k">At the snapshot</div></div>
+      <div class="stat cold" role="listitem"><div class="v">2,256,803<span class="u">BTC</span></div><div class="k">Still lost · 89.2%</div></div>
+      <div class="stat cold" role="listitem"><div class="v">82,086</div><div class="k">Zombie addresses</div></div>
+      <div class="stat hot" role="listitem"><div class="v">245,285<span class="u">BTC</span></div><div class="k">No longer lost · 9.7%</div></div>
+      <div class="stat cool" role="listitem"><div class="v">9,990</div><div class="k">Proved they had keys</div></div>
+      <div class="stat hot" role="listitem"><div class="v">80,009<span class="u">BTC</span></div><div class="k">In a single day</div></div>
+      <div class="stat cool" role="listitem"><div class="v">502</div><div class="k">Ghost wallets</div></div>
+    </div>
+
+    <nav class="toc" aria-label="Table of contents">
+      <p class="toc-title">Contents</p>
+      <ol>
+        <li><a href="#premise">The premise</a></li>
+        <li><a href="#ledger">The ledger</a></li>
+        <li><a href="#death">Two ways to leave</a></li>
+        <li><a href="#rule">The 95% rule</a></li>
+        <li><a href="#timeline">When the lost came back</a></li>
+        <li><a href="#july4">4 July 2025</a></li>
+        <li><a href="#pieces">Other set pieces</a></li>
+        <li><a href="#events">What else was happening</a></li>
+        <li><a href="#stayed">The zombies</a></li>
+        <li><a href="#means">What it means</a></li>
+        <li><a href="#caveats">Caveats</a></li>
+        <li><a href="#appendix">Appendices</a></li>
+        <li><a href="#method">Method</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <!-- ================= 01 PREMISE ================= -->
+  <section id="premise" class="reveal">
+    <div class="sec-head"><span class="sec-num">01</span><h2>The premise</h2></div>
+    <div class="prose">
+      <p class="lede">Every Bitcoin address is a promise that someone, somewhere, holds a key. Most of those promises are never tested. A wallet can sit untouched for a decade and still be perfectly alive, like a house with the lights off.</p>
+
+      <p>The opposite is harder to see. An address can be <strong>dead and still look alive</strong>: keys gone, owner gone, coins unreachable — yet the address still sits in the chain with a balance, indistinguishable from a working wallet. Call these <strong>zombie addresses</strong>: wallets that stopped living years ago and never stopped standing. If their coins are truly lost, no transaction will ever move them again.</p>
+
+      <h3>Where the list came from</h3>
+
+      <p>This population was not assembled at random. The <strong>Bitcoin Key Hunter</strong> app ships with a list built in <strong>2018–19</strong> by a single, brutal filter: every legacy <code>1…</code> address that had <strong>not moved a single satoshi out for more than seven years</strong>.</p>
+
+      <p>Seven years of silence was already an extreme test in 2018. An address that passed it had not spent since roughly 2011 or earlier — before Mt. Gox was famous, before the first halving had happened, when Bitcoin was still a mailing-list curiosity. The working assumption behind such a list is straightforward: if nobody has touched a wallet in that long, <strong>nobody is left to touch it</strong>. The keys are gone. The owner is gone. The coins are lost, and the address is a headstone with a balance on it.</p>
+
+      <p>That premise is what this audit tests. The list holds <strong>92,083 addresses</strong> and the balances they carried when it was compiled. Together they account for <strong>2,530,552 BTC</strong> — more than one bitcoin in eight that has ever been mined.</p>
+
+      <p>By November 2026, the survivors had been silent for <strong>at least fifteen years</strong>, and the oldest of them for nearly the entire life of the asset. If the "lost coins" theory is right, those balances should sit exactly where they were in 2018, forever.</p>
+
+      <p>We checked every single one of them against the live chain. We asked two questions:</p>
+
+      <ol class="steps">
+        <li><strong>Is the money still there?</strong></li>
+        <li><strong>If it isn't, when did it leave?</strong></li>
+      </ol>
+
+      <p>All 92,083 balances were resolved. Every one of the 7,816 fully emptied addresses was matched to the transaction that emptied it. And then we found something the balance column alone hides: <strong>502 more addresses that are functionally empty but technically "funded"</strong> — the ghosts.</p>
+
+      <p>The premise was mostly right, and in one important way completely wrong. The audit can now put a number on each half: <strong>2,256,802.64 BTC is still lost</strong>, and <strong>245,284.56 BTC is not</strong>. Everything that follows is about the line between them.</p>
+    </div>
+  </section>
+
+  <!-- ================= 02 LEDGER ================= -->
+  <section id="ledger" class="reveal">
+    <div class="sec-head"><span class="sec-num">02</span><h2>The ledger</h2></div>
+    <div class="prose">
+      <p>The list held <strong>2,530,552.46 BTC</strong> when it was compiled. Two numbers carry the whole story.</p>
+
+      <p><strong>2,256,802.64 BTC is still lost.</strong><br>
+      It sits in <strong>82,086 zombie addresses</strong> that have not spent a single satoshi since the list was built — <strong>89.2%</strong> of the snapshot, silent for at least fifteen years and, for the oldest, nearly the entire life of Bitcoin. If those keys still existed, someone would have used them by now. Nobody has.</p>
+
+      <p><strong>245,284.56 BTC is no longer lost.</strong><br>
+      It left, from <strong>9,990 addresses</strong> that turned out to have working keys — <strong>9.7%</strong> of the snapshot, and 10.8% of the addresses. Every one of them is proof that "lost" was never a permanent condition. Somebody, somewhere, could still sign.</p>
+
+      <p>The remaining <strong>28,465.27 BTC</strong> — 1.1% — is neither. It still sits in addresses that spent part of their balance, proving they were alive, and then stopped.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>The list, split by what happened to it<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th></th><th class="num">Addresses</th><th class="num">BTC at snapshot</th><th class="num">BTC today</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Zombie addresses — never spent</strong></td><td class="num"><strong>82,086</strong></td><td class="num">2,256,759.10</td><td class="num"><strong>2,256,802.64</strong></td></tr>
+          <tr><td><strong>Proved alive — spent something</strong></td><td class="num"><strong>9,990</strong></td><td class="num">273,793.36</td><td class="num">28,465.27</td></tr>
+          <tr><td>— fully emptied</td><td class="num">7,816</td><td class="num">101,532.01</td><td class="num">0</td></tr>
+          <tr><td>— drained to dust (ghost wallets)</td><td class="num">502</td><td class="num">131,748.86</td><td class="num">0.0269</td></tr>
+          <tr><td>— partial exits</td><td class="num">1,672</td><td class="num">40,512.49</td><td class="num">28,465.24</td></tr>
+          <tr><td>Never funded (zero at snapshot)</td><td class="num">7</td><td class="num">0</td><td class="num">0</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td>Total</td><td class="num">92,083</td><td class="num">2,530,552.46</td><td class="num">2,285,267.90</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="table-note">Zombie addresses hold 43.54 BTC more than at the snapshot: incoming change and dust, not accumulation. Gross outflow from the living cohort is 245,328.09 BTC; 43.54 BTC of that returned as change, which is why net outflow is 245,284.56 BTC. Figures are rounded to 0.01 BTC, so rows may not sum exactly.</p>
+
+    <div class="prose">
+      <p>That is the first surprise: <strong>89.2% of a list of presumed-lost coins is still exactly where it was</strong>, through two brutal bear markets, a pandemic, a wave of exchange collapses and the largest bull market in the asset's history.</p>
+      <p>The second surprise is what the 10.8% that proved itself alive actually did.</p>
+    </div>
+  </section>
+
+  <!-- ================= 03 TWO WAYS TO LEAVE ================= -->
+  <section id="death" class="reveal">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Two ways to leave</h2></div>
+    <div class="prose">
+      <p>A balance of zero is unambiguous. 7,816 addresses were drained completely, and we have the txid and timestamp for every one of them.</p>
+
+      <p>But zero is not the only way out. Consider this address:</p>
+
+      <p><span class="addr" title="Click to copy">1f1miYFQWTzdLiCBxtHHnNiW7WAWPUccr</span></p>
+
+      <p>At the snapshot it held <strong>10,009.26 BTC</strong>. Today it holds <strong>17,835 satoshis</strong> — about twenty dollars.</p>
+
+      <p>It is classified <code>still_funded</code>. And it is, technically. A naive audit would file it under "untouched" and move on. But economically it is a <strong>ghost</strong>: <strong>99.999998%</strong> of its value left on <strong>4 July 2025</strong>, and what remains is dust.</p>
+
+      <p>We defined these as <strong>ghost wallets</strong>: addresses that held at least 1 BTC at the snapshot, still report a positive balance, but now hold less than 0.001 BTC. They are the most misleading rows in any balance-based study, and they turn out to be where most of the money went.</p>
+
+      <p>A ghost is not a zombie. A zombie never moved. A ghost moved everything and left a body behind — a balance that still reads as funded.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Where the 245,000 BTC went<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Cohort</th><th class="num">Addresses</th><th class="num">BTC out (gross)</th><th class="num">Share of all outflow</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Fully emptied</td><td class="num">7,816</td><td class="num">101,532.01</td><td class="num">41.4%</td></tr>
+          <tr><td>Drained to dust (ghosts)</td><td class="num">502</td><td class="num">131,748.83</td><td class="num">53.7%</td></tr>
+          <tr><td>Genuinely partial exits</td><td class="num">1,672</td><td class="num">12,047.25</td><td class="num">4.9%</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td>Total</td><td class="num">9,990</td><td class="num">245,328.09</td><td class="num">100%</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="table-note">Gross outflow. Roughly 43.5 BTC flowed back in as change to addresses that grew, which is why net outflow is 245,284.56 BTC.</p>
+
+    <div class="prose">
+      <p><strong>The ghosts moved more bitcoin than every fully emptied address combined.</strong> 502 addresses — half a percent of the dataset — account for 131,749 BTC, or 5.2% of the entire snapshot on their own. Their combined <em>current</em> balance is <strong>0.0269 BTC</strong> — under $3,000 at a $110,000 bitcoin — spread across five hundred wallets that each once held a fortune.</p>
+    </div>
+
+    <blockquote class="pull">
+      <p>If you sort this dataset by balance, the ghosts look alive. If you sort it by value, they are the emptiest thing in it.</p>
+    </blockquote>
+  </section>
+
+  <!-- ================= 04 95% RULE ================= -->
+  <section id="rule" class="reveal">
+    <div class="sec-head"><span class="sec-num">04</span><h2>The 95% rule</h2></div>
+    <div class="prose">
+      <p>Of the <strong>82,086 zombie addresses</strong>, not one has spent a satoshi. The entire 245,284.56 BTC that left came from the other 9,990 — and the concentration inside that group is extreme.</p>
+      <p>Rank every address that lost value and the concentration is brutal: <strong>1,718 addresses — 1.9% of the dataset — account for 95.0% of everything that left.</strong></p>
+      <p>The other 8,272 addresses that moved at all contributed 12,266 BTC between them: 5.0% of the total across nine years.</p>
+      <p>The exits are also top-heavy within themselves. The 168 emptied addresses that held at least 100 BTC each moved <strong>39,677 BTC</strong> between them — 39.1% of all fully-emptied value, from 2.1% of the emptied addresses. The ten largest emptied addresses alone account for 12,794.21 BTC.</p>
+      <p>Bitcoin's dormant supply is not a smooth distribution of small holders slowly waking up. It is a small number of very large decisions, and a very long tail of nothing happening — a wall of 82,086 addresses that have not moved at all.</p>
+    </div>
+
+    <h3>How long the coins slept</h3>
+    <div class="prose">
+      <p>An address can be old without its coins being old. What matters is the age of the specific output that moved. For the biggest single coins, each one can be traced back to the transaction that created it:</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Dormancy of the largest single coins<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Coins that moved</th><th class="num">Dormant for</th><th class="num">Moved on</th><th class="num">Funded</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>One 3,962.62 BTC pile</strong> — largest coin 1,300 BTC</td><td class="num"><strong>14.5 yrs</strong></td><td class="num mono">2025-07-24</td><td class="num mono">15 Jan 2011</td></tr>
+          <tr><td><strong>Eight 10,000 BTC wallets</strong> — 80,000 BTC</td><td class="num"><strong>14.2–14.3 yrs</strong></td><td class="num mono">2025-07-04</td><td class="num mono">2 Apr – 4 May 2011</td></tr>
+          <tr><td><strong>Thirty-four 50 BTC wallets</strong> — 1,700 BTC</td><td class="num"><strong>13.4–13.6 yrs</strong></td><td class="num mono">2024-03-26</td><td class="num mono">7 Aug – 5 Nov 2010</td></tr>
+          <tr><td><strong>Seven 500 BTC wallets</strong> — 3,500 BTC</td><td class="num"><strong>11.3 yrs</strong></td><td class="num mono">2022-11-11</td><td class="num mono">10 Jul 2011</td></tr>
+          <tr><td><strong>One 1,188.40 BTC address</strong> — largest coin 1,118.40 BTC</td><td class="num"><strong>7.9 yrs</strong></td><td class="num mono">2020-09-04</td><td class="num mono">16 Oct 2012</td></tr>
+          <tr><td><strong>Four wallets</strong> — 6,400 BTC</td><td class="num"><strong>7.5–7.9 yrs</strong></td><td class="num mono">2020-02-10</td><td class="num mono">8 Mar – 23 Aug 2012</td></tr>
+          <tr><td><strong>Three wallets</strong> — 1,889 BTC</td><td class="num"><strong>7.7 yrs</strong></td><td class="num mono">2020-01-24</td><td class="num mono">27 May 2012</td></tr>
+          <tr><td><strong>Two addresses</strong> — 1,850 BTC on the day (largest coins 200 BTC each)</td><td class="num"><strong>7.6 yrs</strong></td><td class="num mono">2018-09-13</td><td class="num mono">10–11 Feb 2011</td></tr>
+          <tr><td><strong>One address</strong> — 4,154.25 BTC, largest coin 1,201.59 BTC</td><td class="num"><strong>7.0 yrs</strong></td><td class="num mono">2019-04-02</td><td class="num mono">19 Apr 2012</td></tr>
+          <tr><td><strong>One address</strong> — 2,000 BTC</td><td class="num"><strong>5.4 yrs</strong></td><td class="num mono">2018-04-25</td><td class="num mono">23 Nov 2012</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">"Dormant for" is measured from the transaction that created the largest single output the address spent to the transaction that spent it. Addresses that spent in several transactions can hold coins of different ages.</p>
+
+    <div class="prose">
+      <p>Read by age, the pattern is a cliff. Everything that moved in 2024 and 2025 had slept for <strong>13 to 14.5 years</strong>. Everything earlier was <strong>5.4 to 11.3 years</strong> old, and most of it seven to eight. The list's seven-year filter left a visible floor: most of these wallets were just old enough to qualify, then moved. The two tails are instructive. The 34 fifty-bitcoin wallets were 2010 coins that waited 13.5 years — mining rewards, not a modern position. The 2,000 BTC address that moved in April 2018 held a coin created only 5.4 years earlier; the address may be older, but the coin was not.</p>
+      <p>The July 2025 giants really were among the oldest large coins in the dataset: <strong>14 years and two to three months</strong>, which is exactly what the press meant by "dormant for 14 years". The 3,962 BTC pile that moved three weeks later was older still. The rest of the big exits were younger than the folklore: the 2022 FTX-day cohort was 11.3 years old, and the 2018–2020 movers had mostly been still for <strong>seven to eight years</strong> — old enough to pass the list's seven-year filter, not old enough to be relics.</p>
+      <p>Dormancy is a property of the coin, not the address. A wallet can be twenty years old and hold a coin minted last month; the reverse is equally possible. Only the output has an age.</p>
+    </div>
+  </section>
+
+  <!-- ================= 05 TIMELINE ================= -->
+  <section id="timeline" class="reveal">
+    <div class="sec-head"><span class="sec-num">05</span><h2>When the lost came back</h2></div>
+    <div class="prose">
+      <p>Combining every address that lost value — fully emptied, drained to dust and partially spent — gives the real timeline of economic exits. The figures cover all 9,990 addresses that spent something, not only the ones that emptied.</p>
+    </div>
+
+    <figure>
+      <p class="fig-title">BTC that left, by year</p>
+      <div class="bars">
+        <div class="bar-row"><span class="bar-year">2018</span><div class="bar-track"><span class="bar-full" style="width:13.72%" title="Fully emptied: 13,148.09 BTC"></span><span class="bar-dust" style="width:7.14%" title="Left a residue: 6,843.56 BTC"></span></div><span class="bar-val">19,992</span></div>
+        <div class="bar-row"><span class="bar-year">2019</span><div class="bar-track"><span class="bar-full" style="width:20.06%" title="Fully emptied: 19,223.69 BTC"></span><span class="bar-dust" style="width:13.52%" title="Left a residue: 12,958.18 BTC"></span></div><span class="bar-val">32,182</span></div>
+        <div class="bar-row"><span class="bar-year">2020</span><div class="bar-track"><span class="bar-full" style="width:15.76%" title="Fully emptied: 15,103.76 BTC"></span><span class="bar-dust" style="width:10.27%" title="Left a residue: 9,842.40 BTC"></span></div><span class="bar-val">24,946</span></div>
+        <div class="bar-row"><span class="bar-year">2021</span><div class="bar-track"><span class="bar-full" style="width:17.80%" title="Fully emptied: 17,056.52 BTC"></span><span class="bar-dust" style="width:7.07%" title="Left a residue: 6,778.52 BTC"></span></div><span class="bar-val">23,835</span></div>
+        <div class="bar-row"><span class="bar-year">2022</span><div class="bar-track"><span class="bar-full" style="width:5.10%" title="Fully emptied: 4,886.29 BTC"></span><span class="bar-dust" style="width:6.89%" title="Left a residue: 6,603.34 BTC"></span></div><span class="bar-val">11,490</span></div>
+        <div class="bar-row"><span class="bar-year">2023</span><div class="bar-track"><span class="bar-full" style="width:6.51%" title="Fully emptied: 6,236.44 BTC"></span><span class="bar-dust" style="width:6.35%" title="Left a residue: 6,085.84 BTC"></span></div><span class="bar-val">12,322</span></div>
+        <div class="bar-row"><span class="bar-year">2024</span><div class="bar-track"><span class="bar-full" style="width:12.27%" title="Fully emptied: 11,761.68 BTC"></span><span class="bar-dust" style="width:3.81%" title="Left a residue: 3,647.10 BTC"></span></div><span class="bar-val">15,409</span></div>
+        <div class="bar-row peak"><span class="bar-year">2025</span><div class="bar-track"><span class="bar-full" style="width:8.51%" title="Fully emptied: 8,154.12 BTC"></span><span class="bar-dust" style="width:91.49%" title="Left a residue: 87,691.07 BTC"></span></div><span class="bar-val">95,845</span></div>
+        <div class="bar-row"><span class="bar-year">2026*</span><div class="bar-track"><span class="bar-full" style="width:6.22%" title="Fully emptied: 5,961.36 BTC"></span><span class="bar-dust" style="width:3.49%" title="Left a residue: 3,345.78 BTC"></span></div><span class="bar-val">9,307</span></div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch full"></i> Fully emptied</span>
+        <span><i class="swatch dust"></i> Left a residue</span>
+        <span>*2026 is year-to-date through 11 November</span>
+      </div>
+      <figcaption><b>One year breaks the pattern.</b> From 2018 to 2024 the outflow is a geological trickle. In 2025 it becomes a cliff — and almost all of it is the ghost cohort leaving dust behind, not fully emptied wallets.</figcaption>
+    </figure>
+
+    <figure>
+      <p class="fig-title">Cumulative BTC out</p>
+      <div class="svg-wrap">
+        <svg viewBox="0 0 800 230" role="img" aria-label="Cumulative bitcoin outflow rises slowly from 19,992 BTC in 2018 to 140,175 in 2024, then jumps to 236,021 in 2025 and 245,328 in 2026.">
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f7931a" stop-opacity=".35"/>
+              <stop offset="100%" stop-color="#f7931a" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line class="grid-line" x1="40" y1="20"  x2="760" y2="20"/>
+          <line class="grid-line" x1="40" y1="65"  x2="760" y2="65"/>
+          <line class="grid-line" x1="40" y1="110" x2="760" y2="110"/>
+          <line class="grid-line" x1="40" y1="155" x2="760" y2="155"/>
+          <line class="grid-line" x1="40" y1="200" x2="760" y2="200"/>
+          <text class="axis-text" x="4" y="24">245k</text>
+          <text class="axis-text" x="4" y="69">184k</text>
+          <text class="axis-text" x="4" y="114">123k</text>
+          <text class="axis-text" x="4" y="159">61k</text>
+          <text class="axis-text" x="14" y="204">0</text>
+
+          <path class="area" d="M40,185.3 L130,161.7 L220,143.4 L310,125.9 L400,117.5 L490,108.5 L580,97.2 L670,26.8 L760,20 L760,200 L40,200 Z"/>
+          <path class="line" d="M40,185.3 L130,161.7 L220,143.4 L310,125.9 L400,117.5 L490,108.5 L580,97.2 L670,26.8 L760,20"/>
+
+          <circle class="pt" cx="40"  cy="185.3" r="3.5"/>
+          <circle class="pt" cx="130" cy="161.7" r="3.5"/>
+          <circle class="pt" cx="220" cy="143.4" r="3.5"/>
+          <circle class="pt" cx="310" cy="125.9" r="3.5"/>
+          <circle class="pt" cx="400" cy="117.5" r="3.5"/>
+          <circle class="pt" cx="490" cy="108.5" r="3.5"/>
+          <circle class="pt" cx="580" cy="97.2" r="3.5"/>
+          <circle class="pt hi" cx="670" cy="26.8" r="4.5"/>
+          <circle class="pt hi" cx="760" cy="20" r="4.5"/>
+
+          <text class="axis-text" x="40"  y="220" text-anchor="middle">2018</text>
+          <text class="axis-text" x="130" y="220" text-anchor="middle">2019</text>
+          <text class="axis-text" x="220" y="220" text-anchor="middle">2020</text>
+          <text class="axis-text" x="310" y="220" text-anchor="middle">2021</text>
+          <text class="axis-text" x="400" y="220" text-anchor="middle">2022</text>
+          <text class="axis-text" x="490" y="220" text-anchor="middle">2023</text>
+          <text class="axis-text" x="580" y="220" text-anchor="middle">2024</text>
+          <text class="axis-text" x="670" y="220" text-anchor="middle">2025</text>
+          <text class="axis-text" x="760" y="220" text-anchor="middle">2026</text>
+        </svg>
+      </div>
+      <figcaption><b>Seven flat years, then a vertical line.</b> The cumulative curve adds 140,175 BTC by 2024 — and another 95,845 BTC in 2025 alone.</figcaption>
+    </figure>
+
+    <div class="prose">
+      <p>Read the shape of it. For seven years the outflow is a slow, almost geological trickle: eleven to thirty-two thousand bitcoin a year, most of it in small pieces, most of it invisible. Then 2025 happens.</p>
+      <p><strong>2025 alone accounts for 95,845 BTC — 39% of all outflow in the entire audit — and 87,240 BTC of it came from just 60 of the 502 ghosts.</strong></p>
+      <p>And within 2025, one day stands out so far that it distorts the chart.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>The full yearly ledger<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Year</th><th class="num">Addresses with outflow</th><th class="num">BTC out</th><th class="num">Fully emptied</th><th class="num">Left a residue</th><th class="num">Cumulative</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2018</td><td class="num">745</td><td class="num">19,991.65</td><td class="num">13,148.09</td><td class="num">6,843.56</td><td class="num">19,991.65</td></tr>
+          <tr><td>2019</td><td class="num">862</td><td class="num">32,181.87</td><td class="num">19,223.69</td><td class="num">12,958.18</td><td class="num">52,173.52</td></tr>
+          <tr><td>2020</td><td class="num">775</td><td class="num">24,946.16</td><td class="num">15,103.76</td><td class="num">9,842.40</td><td class="num">77,119.68</td></tr>
+          <tr><td>2021</td><td class="num">1,586</td><td class="num">23,835.03</td><td class="num">17,056.52</td><td class="num">6,778.52</td><td class="num">100,954.71</td></tr>
+          <tr><td>2022</td><td class="num">585</td><td class="num">11,489.62</td><td class="num">4,886.29</td><td class="num">6,603.34</td><td class="num">112,444.33</td></tr>
+          <tr><td>2023</td><td class="num">732</td><td class="num">12,322.28</td><td class="num">6,236.44</td><td class="num">6,085.84</td><td class="num">124,766.61</td></tr>
+          <tr><td>2024</td><td class="num">888</td><td class="num">15,408.78</td><td class="num">11,761.68</td><td class="num">3,647.10</td><td class="num">140,175.39</td></tr>
+          <tr><td>2025</td><td class="num">1,375</td><td class="num"><strong>95,845.20</strong></td><td class="num">8,154.12</td><td class="num"><strong>87,691.07</strong></td><td class="num">236,020.59</td></tr>
+          <tr><td>2026*</td><td class="num">1,695</td><td class="num">9,307.14</td><td class="num">5,961.36</td><td class="num">3,345.78</td><td class="num">245,327.73</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">An address can appear in more than one year. "Left a residue" combines ghosts and partially spent addresses. Gross outflow; 43.54 BTC returned to zombie addresses as change, which is why the net figure in the ledger is 245,284.56 BTC. 0.37 BTC of dust-level outflow is not dated.</p>
+  </section>
+
+  <!-- ================= 06 JULY 4 ================= -->
+  <section id="july4" class="reveal">
+    <div class="sec-head"><span class="sec-num">06</span><h2>4 July 2025: eighty thousand bitcoin in eleven hours</h2></div>
+    <div class="prose">
+      <p>On 4 July 2025, between 03:39 and 14:54 UTC, <strong>eight separate addresses were drained in sequence</strong>. Each had held roughly <strong>10,000 BTC</strong> at the snapshot — seven of them exactly that, the last 10,009.26. Each was left with a residue of between 14,000 and 43,000 satoshis. Together they moved <strong>80,009 BTC</strong>.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>The 4 July sweep<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Time (UTC)</th><th>Address</th><th class="num">BTC out</th><th class="num">Left behind</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">03:39</td><td><span class="addr">12tLs9c9RsALt4ockxa1hB4iTCTSmxj2me</span></td><td class="num">10,000.01</td><td class="num">15,105 sats</td></tr>
+          <tr><td class="mono">04:06</td><td><span class="addr">1KbrSKrT3GeEruTuuYYUSQ35JwKbrAWJYm</span></td><td class="num">10,000.01</td><td class="num">43,162 sats</td></tr>
+          <tr><td class="mono">12:37</td><td><span class="addr">1P1iThxBH542Gmk1kZNXyji4E4iwpvSbrt</span></td><td class="num">10,000.01</td><td class="num">16,979 sats</td></tr>
+          <tr><td class="mono">13:07</td><td><span class="addr">1CPaziTqeEixPoSFtJxu74uDGbpEAotZom</span></td><td class="num">10,000.01</td><td class="num">29,368 sats</td></tr>
+          <tr><td class="mono">13:31</td><td><span class="addr">14YK4mzJGo5NKkNnmVJeuEAQftLt795Gec</span></td><td class="num">10,000.01</td><td class="num">16,289 sats</td></tr>
+          <tr><td class="mono">14:01</td><td><span class="addr">1ucXXZQSEf4zny2HRwAQKtVpkLPTUKRtt</span></td><td class="num">10,000.01</td><td class="num">14,105 sats</td></tr>
+          <tr><td class="mono">14:30</td><td><span class="addr">1BAFWQhH9pNkz3mZDQ1tWrtKkSHVCkc3fV</span></td><td class="num">10,000.01</td><td class="num">19,743 sats</td></tr>
+          <tr><td class="mono">14:54</td><td><span class="addr">1f1miYFQWTzdLiCBxtHHnNiW7WAWPUccr</span></td><td class="num">10,009.26</td><td class="num">17,835 sats</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="2">Eight addresses, one day</td><td class="num">80,009.21</td><td class="num">—</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>Those eight addresses were not random. They are <strong>eight of the twelve largest addresses in the entire snapshot</strong>. Only four addresses in the dataset ever held more: 79,957 BTC, 31,000 BTC, 28,151 BTC and 10,771 BTC — and all four are still sitting there, unmoved.</p>
+
+      <p>That selectivity matters. A protocol change is not selective: it applies to every address at once, and it is a public, contentious process. No Bitcoin consensus change has ever spent coins on someone else's behalf — the 2016 proposal to fork the chain and recover the 119,756 BTC stolen from Bitfinex was abandoned under exactly that objection.</p>
+
+      <p>A third of all the value that left this dataset in nine years left on a single day, from a coordinated set of round-numbered 10,000 BTC positions, in a sequence spread across eleven hours of a Friday.</p>
+
+      <p>We cannot say from addresses alone where those coins went, or why. What we can say is what the shape suggests: this was not a market sale. Nobody sells 80,000 BTC by draining eight long-dormant cold wallets to dust one at a time over eleven hours. Round-number positions, sequential timing, dust left behind — that is the signature of a <strong>custody migration or a proof-of-control exercise</strong>, not a liquidation.</p>
+
+      <p>Twenty days later, on <strong>24 July 2025</strong>, one more giant was drained: <span class="addr">15MZvKjqeNz4AVz2QrHumQcRJq2JVHjFUz</span>, <strong>3,962.62 BTC</strong>, again leaving 16,984 satoshis behind. It is one of eighteen ghosts that once held at least 1,000 BTC — and at 3,962 BTC, the second-largest of them all, behind only the 4 July shards.</p>
+    </div>
+
+    <div class="note info">
+      <strong>What a ghost looks like on a block explorer.</strong> Eight balance checks, eight green checkmarks, eight addresses that a naive scan would report as holding 10,000 BTC each. The coins left in July 2025; the balances will keep saying "funded" forever.
+    </div>
+  </section>
+
+  <!-- ================= 07 OTHER SET PIECES ================= -->
+  <section id="pieces" class="reveal">
+    <div class="sec-head"><span class="sec-num">07</span><h2>Other set pieces</h2></div>
+
+    <h3><span class="tag">2020</span>10 February — four wallets, four transactions, 6,400 BTC</h3>
+    <div class="prose">
+      <p><span class="addr">1MsgeQMD…</span> (2,000 BTC), <span class="addr">1MEzdoJi…</span> (1,500), <span class="addr">1H3JocD1…</span> (1,500) and <span class="addr">1FhLExX7…</span> (1,400) did not move together. They left in <strong>four separate transactions</strong> on the afternoon of 10 February 2020, between 14:51 and 16:27 UTC. Each balance was split into two clean round-number outputs:</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Four related 2012 wallets, emptied over 96 minutes<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Time (UTC)</th><th>Wallet</th><th class="num">In</th><th>Split into</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">14:51</td><td class="mono">1FhLExX7…</td><td class="num">1,400</td><td class="mono">900 + 500</td></tr>
+          <tr><td class="mono">14:54</td><td class="mono">1MEzdoJi…</td><td class="num">1,500</td><td class="mono">1,000 + 500</td></tr>
+          <tr><td class="mono">14:54</td><td class="mono">1H3JocD1…</td><td class="num">1,500</td><td class="mono">1,000 + 500</td></tr>
+          <tr><td class="mono">16:27</td><td class="mono">1MsgeQMD…</td><td class="num">2,000</td><td class="mono">1,500 + 500</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>At 08:51 the next morning, one transaction swept the four leftovers: <strong>exactly 1,200 satoshis each</strong>.</p>
+      <div class="txhash" title="Click to copy">0264842ce48933f809327b42736dd166a78d1090aeaf99623e8aaed8d077d800</div>
+      <p>The residues are the only thing the four addresses shared on-chain. This is not a consolidation; it is a staged payout — four related 2012 wallets, emptied into clean chunks over 96 minutes, then the dust collected in a single pass. Every coin had been dormant for <strong>7.5 to 7.9 years</strong>.</p>
+    </div>
+
+    <h3><span class="tag">2024</span>26 March — thirty-four addresses of exactly 50 BTC</h3>
+    <div class="prose">
+      <p>On a single day in March 2024, <strong>34 addresses holding exactly 50 BTC each</strong> were emptied in <strong>one transaction</strong>: 1,700 BTC. Two smaller addresses moved another 1.21 BTC that day, for a day total of <strong>1,701.21 BTC from 36 addresses</strong>. The 50 BTC outputs were created between 7 August and 5 November 2010, so those coins had been dormant for <strong>13.4 to 13.6 years</strong>.</p>
+      <p>Fifty bitcoin was the block reward until the first halving in 2012, and the list is dominated by single-reward wallets: <strong>32,537 of its addresses held exactly 50 BTC</strong>. Only <strong>723</strong> have a smaller balance today; <strong>629</strong> are empty. Between November 2018 and September 2026 the chain shows <strong>24 separate days</strong> on which batches of eight or more of these wallets moved together — 18 on 24 November 2019, 30 on 1 March 2024, 34 on 26 March 2024, 28 on 22 May 2024, 30 on 10 January 2026. That is not 629 independent decisions. It is a small number of operators working through a large stock of mining-era keys, one batch at a time.</p>
+      <p>Thirty-four identical outputs in one sweep is a batch operation — the kind of pattern produced by an exchange or custodial service consolidating customer addresses, not by 34 individuals deciding to sell on the same afternoon. The recurrence makes that harder to argue with: this is a standing schedule, not a one-off.</p>
+    </div>
+
+    <h3><span class="tag">2020</span>24 January — three wallets, two transactions</h3>
+    <div class="prose">
+      <p><span class="addr">1GW9vm3Q…</span> (641 BTC), <span class="addr">12th9wa1…</span> (625) and <span class="addr">1KdhAg4Z…</span> (623) left on a Friday afternoon, in <strong>two transactions 34 minutes apart</strong>. The 625 BTC slice went first, alone, at 15:48 UTC. The other two went together at 16:22. All three wallets had been funded on <strong>27 May 2012</strong>, so their coins were <strong>7.7 years</strong> old.</p>
+      <p>Three odd-sized slices — 641, 625, 623 — are not round-number withdrawals. They are what is left of three positions after earlier spending, moved together on one operator's schedule. Two transactions instead of one is just as telling: a single controller can afford to take 34 minutes.</p>
+    </div>
+
+    <h3><span class="tag">2022</span>11 November — seven identical 500 BTC wallets</h3>
+    <div class="prose">
+      <p>On the day FTX filed for bankruptcy, <strong>seven addresses holding exactly 500 BTC each</strong> were drained to dust — 3,500 BTC in total, plus 75 BTC from two fully-emptied addresses. Every one of the seven coins had been created on <strong>10 July 2011</strong>, so it had been dormant for <strong>11.3 years</strong> before that morning. Seven identical round-number positions moving on that particular day is the kind of coincidence that invites a story. We can't prove one from addresses alone, and we won't: this audit records what moved and when, not who moved it. But it is the clearest example in the dataset of <em>why</em> the dates matter as much as the amounts.</p>
+    </div>
+
+    <h3><span class="tag">2019</span>7 January – 2 April — the largest single-address exit</h3>
+    <div class="prose">
+      <p><span class="addr">1FdjFtrBwf9Jc9fsGN2GtHmG2vs5ZcEuWH</span> held <strong>4,154.25 BTC</strong>, the largest balance in the dataset that was eventually emptied. It did not leave in one transaction. It went out in <strong>five transactions across three dates</strong>: 2,001.71 BTC on 7 January 2019, 950.95 BTC on 13 January, and the final 1,201.59 BTC on 2 April. The largest single coin in the address — the 1,201.59 BTC output created on <strong>19 April 2012</strong> — had been dormant for <strong>7.0 years</strong>.</p>
+      <p>This is the address that teaches the difference between a spend and an exit. The CSV records its last outgoing transaction on <strong>3 February 2020</strong> — a 0.001 BTC dust sweep, a year after the money had gone. Read the last-spend column alone and you would date the exit to the wrong year. Read the five spends in order and you get a staged liquidation over eleven weeks.</p>
+    </div>
+  </section>
+
+  <!-- ================= 08 WHAT ELSE WAS HAPPENING ================= -->
+  <section id="events" class="reveal">
+    <div class="sec-head"><span class="sec-num">08</span><h2>What else was happening</h2></div>
+    <div class="prose">
+      <p>Dating a movement tells you <em>when</em>. It does not tell you <em>why</em>. But the dates are not random, and several of them land on days the rest of the world remembers.</p>
+      <p>Here are the audit's twelve biggest days, set against the historical record. The last column is the honest part: whether the event actually explains the move.</p>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>The twelve biggest days, in context<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Date (UTC)</th><th class="num">BTC out</th><th class="num">Addresses</th><th>What else happened that day, or that week</th><th>Does it explain the move?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">2025-07-04</td><td class="num">80,010</td><td class="num">10</td><td>US Independence Day. Trump signs the One Big Beautiful Bill Act. US markets closed. The transfers themselves become the day's crypto news: eight wallets dormant about 14 years.</td><td><strong>No.</strong> Nothing to react to, and bitcoin barely reacted.</td></tr>
+          <tr><td class="mono">2020-02-10</td><td class="num">6,402</td><td class="num">6</td><td>Markets near record highs; the WHO names the disease COVID-19 the following day.</td><td><strong>Not directly.</strong> The COVID crash was still three weeks away.</td></tr>
+          <tr><td class="mono">2025-07-24</td><td class="num">3,963</td><td class="num">2</td><td>No major event; bitcoin near its 2025 highs.</td><td><strong>No obvious catalyst.</strong></td></tr>
+          <tr><td class="mono">2022-11-11</td><td class="num">3,575</td><td class="num">9</td><td>FTX files for Chapter 11 bankruptcy.</td><td><strong>Yes, plausibly.</strong> The clearest stress-date in the set.</td></tr>
+          <tr><td class="mono">2019-01-07</td><td class="num">2,145</td><td class="num">8</td><td>Bitcoin around $4,000, still in the post-2018 trough; no single event.</td><td><strong>No obvious catalyst.</strong></td></tr>
+          <tr><td class="mono">2018-04-25</td><td class="num">2,051</td><td class="num">4</td><td>Bitcoin around $9,300, recovering from the first-quarter crash; no single event.</td><td><strong>No obvious catalyst.</strong></td></tr>
+          <tr><td class="mono">2025-12-05</td><td class="num">2,015</td><td class="num">10</td><td>Bitcoin in a weeks-long slide from its October high; it would end the year near $87,000.</td><td><strong>Mood, not event.</strong> No single trigger.</td></tr>
+          <tr><td class="mono">2019-07-20</td><td class="num">2,002</td><td class="num">5</td><td>Backlash to Facebook's Libra: Senate hearings days earlier, Trump's anti-crypto tweets, bitcoin down to about $10,500.</td><td><strong>Context, not catalyst.</strong> A bad week, not a single event.</td></tr>
+          <tr><td class="mono">2018-05-17</td><td class="num">2,000</td><td class="num">4</td><td>Bitcoin around $8,000; no single event.</td><td><strong>No — and the pattern says so.</strong> These wallets spent part of their balance and kept a residual position. A sale does not leave the position behind.</td></tr>
+          <tr><td class="mono">2020-01-24</td><td class="num">1,892</td><td class="num">5</td><td>Davos week; bitcoin around $8,400; no single event.</td><td><strong>No obvious link.</strong></td></tr>
+          <tr><td class="mono">2018-09-13</td><td class="num">1,853</td><td class="num">5</td><td>The crypto winter deepens: the 5 September crash hit 95 of the top 100 coins; bitcoin around $6,350.</td><td><strong>Yes.</strong> Bear-market capitulation.</td></tr>
+          <tr><td class="mono">2024-03-26</td><td class="num">1,701</td><td class="num">36</td><td>Bitcoin around $70,000; spot ETF inflows resume after a five-day outflow streak.</td><td><strong>Yes — institutional plumbing.</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Dates are UTC and day-level; an event in another timezone can fall on an adjacent calendar day. Values are net outflow attributed to the snapshot coins, so an address that also received change appears at its true exit size, not its gross spend.</p>
+
+    <h3>Three kinds of coincidence</h3>
+    <div class="prose">
+      <p>Read down the table and the dates fall into three groups.</p>
+
+      <p><strong>Market stress.</strong> The crypto-winter capitulation of September 2018, the FTX filing of November 2022, the tech-stock selloff of September 2020 (which took 1,188 BTC out of this dataset on the 4th) — these are days when a holder with a working key had a reason to move. That is the uncomfortable part. <strong>Coins that are genuinely lost do not wake up on the worst day of a bear market.</strong> Some of the supply the list assumed was gone was never gone; it was waiting, and it chose its moments.</p>
+
+      <p><strong>Institutional plumbing.</strong> The 34 × 50 BTC batch of 26 March 2024 is not a panic. It is a custodian or exchange running a batch job, and it happens to land on the day ETF flows turned positive again. The date does not explain the transaction; the transaction explains the date. Both are just the same institution's calendar.</p>
+
+      <p><strong>Nothing at all.</strong> The largest move in the entire audit — 80,009 BTC, a third of all outflow — happened on 4 July 2025: a US public holiday, with markets closed and no crypto news of any kind. The story that day was the <em>size</em> of the transfer, not its cause. That absence is itself evidence. You do not move eighty thousand bitcoin because of a headline when no headline exists. You move it because a custodian changed systems, or because someone finally proved they still held keys that everyone had assumed were gone.</p>
+    </div>
+
+    <h3>The detail that gives the game away</h3>
+    <div class="prose">
+      <p>Press coverage of 4 July 2025 described the eight wallets as <strong>"dormant for 14 years"</strong>, and treated that as astonishing. The chain is more precise: the eight 10,000 BTC coins were created between 2 April and 4 May 2011, so they had been perfectly still for <strong>14 years and two to three months</strong>.</p>
+
+      <p>In this dataset, it is not astonishing. It is the entry criterion.</p>
+
+      <p>Every address here was already seven-plus years silent when the list was built in 2018–19. An address that moved in 2025 had therefore been quiet for roughly <strong>thirteen to fifteen years</strong> — which is exactly what the headlines were gasping at. The list did not accidentally capture history's most patient holders. It was <em>designed</em> to capture them, and then it waited long enough for the rest of the world to notice.</p>
+
+      <p>That is also why the dates matter more than the amounts. A 10,000 BTC wallet moving is not news because of the number. It is news because of the silence that preceded it — and because, for the first time in a decade, that silence ended.</p>
+    </div>
+
+    <blockquote class="pull">
+      <p>The largest move in the dataset happened on a public holiday, when the markets were shut and nobody was saying anything.</p>
+    </blockquote>
+  </section>
+
+  <!-- ================= 09 THE ZOMBIES ================= -->
+  <section id="stayed" class="reveal">
+    <div class="sec-head"><span class="sec-num">09</span><h2>The zombies</h2></div>
+    <div class="prose">
+      <p>It would be easy to write this as a story about coins leaving. The larger story is about the coins that stayed — and the 82,086 addresses that have held them, silently, for a decade and a half or more.</p>
+    </div>
+
+    <ul class="clean">
+      <li><strong>82,086 addresses have not spent a single satoshi since the snapshot.</strong> They hold <strong>2,256,802.64 BTC</strong> — <strong>89.2%</strong> of everything the list held, untouched for at least fifteen years and, for the oldest, nearly the entire life of Bitcoin. These are the <strong>zombie addresses</strong>.</li>
+      <li><strong>47,262 of them have not changed at all</strong> — same balance, satoshi for satoshi, at <strong>83,623.67 BTC</strong>. The other <strong>34,824</strong> received change or dust and grew by a combined <strong>43.5 BTC</strong>, a rounding error. Growth in this dataset is noise, not accumulation.</li>
+      <li><strong>94 addresses still hold at least 1,000 BTC each</strong>, for a total of <strong>344,864 BTC</strong> — 15.1% of everything in the surviving set.</li>
+      <li><strong>Four addresses still hold more than 10,000 BTC</strong>, and none has moved a meaningful amount.</li>
+    </ul>
+
+    <div class="table-wrap">
+      <table>
+        <caption>The four untouched giants<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Address</th><th class="num">BTC at snapshot</th><th class="num">BTC today</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="addr">1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF</span></td><td class="num">79,957.17</td><td class="num"><strong>79,957.27</strong></td></tr>
+          <tr><td><span class="addr">12ib7dApVFvg82TXKycWBNpN8kFyiAN1dr</span></td><td class="num">31,000.07</td><td class="num"><strong>31,000.08</strong></td></tr>
+          <tr><td><span class="addr">12tkqA9xSoowkzoERHMWNKsTey55YEBqkv</span></td><td class="num">28,151.05</td><td class="num"><strong>28,151.06</strong></td></tr>
+          <tr><td><span class="addr">1F34duy2eeMz5mSrvFepVzy7Y1rBsnAyWC</span></td><td class="num">10,770.53</td><td class="num"><strong>10,770.54</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>The deltas of a few hundredths of a bitcoin are incoming dust and small payments, not withdrawals. These four addresses have held 149,879 BTC, unmoved, through everything.</p>
+    </div>
+  </section>
+
+  <!-- ================= 09 MEANING ================= -->
+  <section id="means" class="reveal">
+    <div class="sec-head"><span class="sec-num">10</span><h2>What it means</h2></div>
+    <div class="prose"><p>Three readings, in increasing order of speculation.</p></div>
+
+    <div class="cards">
+      <article class="card" data-n="1">
+        <h4>The lost pile is still lost</h4>
+        <p><strong>2,256,802.64 BTC</strong> across <strong>82,086 zombie addresses</strong> — not one satoshi out. Nine years, two bear markets, a pandemic, a bull market, and 89.2% of the list has not moved. Whatever the narrative about "old coins about to move" is in any given cycle, this dataset says the default state of an address like this is silence. The distribution is not a coiled spring; it is a graveyard.</p>
+      </article>
+      <article class="card" data-n="2">
+        <h4>The exits are institutional, not individual</h4>
+        <p>Of the 245,285 BTC that left, 95% came from 1.9% of addresses, and the largest single day was a coordinated sweep of eight 10,000 BTC positions. Batch transactions, round numbers, identical residue, sequential timing — the fingerprints throughout are those of custodians, exchanges and large operators, not retail holders panic-selling.</p>
+      </article>
+      <article class="card" data-n="3">
+        <h4>The ghosts are the trap</h4>
+        <p>Any study that classifies addresses by current balance will systematically misread the last five years. 502 addresses holding 131,749 BTC would be counted as "still dormant" by a balance check. They are not dormant. They are empty — and the <em>appearance</em> of a live 10,000 BTC wallet persisted for years after the coins were gone.</p>
+      </article>
+    </div>
+
+    <blockquote class="pull">
+      <p>A zombie is a wallet that never moved. A ghost is a wallet that moved and left its body behind.</p>
+    </blockquote>
+  </section>
+
+  <!-- ================= 10 CAVEATS ================= -->
+  <section id="caveats" class="reveal">
+    <div class="sec-head"><span class="sec-num">11</span><h2>Caveats</h2></div>
+    <div class="prose">
+      <p>Every number above comes with a caveat, and the honest ones matter more than the clean ones.</p>
+    </div>
+
+    <ul class="clean">
+      <li><strong>An address is not a person, a wallet, or an entity.</strong> One operator can control thousands of addresses; one address can be shared by a service. "Addresses that moved" is not "people who sold."</li>
+      <li><strong>A spend proves a key, not an owner.</strong> Every emptying here is a transaction that consumed the address's coins, and the network accepted it under the same signature rules it has always used. No protocol upgrade can move coins out of an address: P2SH (2012), SegWit (2017) and Taproot (2021) changed what <em>new</em> outputs can look like, not who controls old ones. So each exit proves someone could sign — not that it was the original owner, and not who they are. A recovered backup, a custodian, an heir, a thief or a guessed weak key would all look identical on-chain.</li>
+      <li><strong>"Zombie" is a status, not proof of death.</strong> We use it for addresses that have not spent since the list was compiled. That is strong evidence the keys are gone, not proof: a living owner can simply choose not to move coins. The 2,256,802.64 BTC figure means "still lost to us", not "provably destroyed".</li>
+      <li><strong>Change outputs distort everything.</strong> When a large address spends, most of the value often returns to a new address in the same transaction. We measure <em>value that left this address</em>, not <em>value that was sold</em>.</li>
+      <li><strong>Dust is a definition, not a fact.</strong> We set the ghost threshold at 0.001 BTC (100,000 sats). At 0.0001 BTC the cohort is 441 addresses holding 34,478 BTC; at 0.00001 BTC it is 250 addresses holding 9,561 BTC. The 502 / 131,749 figure is the 0.001 cut, and it is the one that best separates "residue" from "a small but real balance."</li>
+      <li><strong>The CSV and this article date exits differently, on purpose.</strong> The CSV records each address's <em>most recent</em> outgoing transaction. The article dates each address's exit to the day of its <strong>largest net outflow</strong>: spends are walked in order and attributed only up to the decline from snapshot to current balance, so a later dust sweep cannot masquerade as the exit. For a single-spend emptying the two agree. For a staged one they do not. <span class="addr">1Fdj…</span> last touched the chain on 3 February 2020, when a 0.001 BTC residue was swept, but its 4,154.25 BTC left between 7 January and 2 April 2019. The article's dating is the honest one for economic outflow; the CSV is the literal last-touch record.</li>
+      <li><strong>The oldest outputs are P2PK, and some explorers cannot see them.</strong> Several 2010–2011 coins are pay-to-public-key outputs, which Esplora-based APIs do not map to an address at all. Address histories here were resolved through <code>blockchain.info/multiaddr</code>, which does map them. A sweep that silently skipped P2PK inputs would undercount the oldest spending — which is precisely the spending this audit is about.</li>
+      <li><strong>The seven-year rule is the list's origin, not this audit's measurement.</strong> Every address here had already gone more than seven years without an outgoing spend when it was selected in 2018–19. An address that moved in 2025 had therefore been silent for roughly <strong>13–15 years</strong> at the moment it moved, not seven.</li>
+      <li><strong>A date is not a motive.</strong> Several big moves coincide with market stress or institutional news; several coincide with nothing at all. This audit records when coins moved, not who moved them or why.</li>
+      <li><strong>The list is legacy <code>1…</code> addresses only.</strong> No bech32, no P2SH. Modern movement — especially migration to <code>bc1…</code> — is therefore undercounted. Some of the 2025 activity may be exactly that: coins moving to a new address format and leaving this dataset's view entirely.</li>
+      <li><strong>2026 is year-to-date</strong> through 11 November 2026.</li>
+      <li><strong>Balances were read in November 2026</strong> and are a snapshot of that moment; the chain keeps moving. The newest exit in the file happened on <strong>11 November 2026 at 14:49 UTC</strong>, roughly eighteen hours before the final CSV was written. The oldest was <strong>15 March 2018</strong>.</li>
+      <li><strong>Six addresses</strong> had no transaction history at all and turned out to hold zero at the snapshot, so they never had funds to lose; all 7,816 genuinely emptied addresses are dated.</li>
+    </ul>
+  </section>
+
+  <!-- ================= 12 APPENDICES ================= -->
+  <section id="appendix" class="reveal">
+    <div class="sec-head"><span class="sec-num">12</span><h2>Appendices</h2></div>
+
+    <div class="table-wrap">
+      <table>
+        <caption>The fifteen largest exits<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th class="num">#</th><th class="num">BTC out</th><th>Main exit (UTC)</th><th>Kind</th><th>Address</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="rank">1</td><td class="num">10,009.26</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1f1miYFQWTzdLiCBxtHHnNiW7WAWPUccr</span></td></tr>
+          <tr><td class="rank">2</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">14YK4mzJGo5NKkNnmVJeuEAQftLt795Gec</span></td></tr>
+          <tr><td class="rank">3</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">12tLs9c9RsALt4ockxa1hB4iTCTSmxj2me</span></td></tr>
+          <tr><td class="rank">4</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1P1iThxBH542Gmk1kZNXyji4E4iwpvSbrt</span></td></tr>
+          <tr><td class="rank">5</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1KbrSKrT3GeEruTuuYYUSQ35JwKbrAWJYm</span></td></tr>
+          <tr><td class="rank">6</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1ucXXZQSEf4zny2HRwAQKtVpkLPTUKRtt</span></td></tr>
+          <tr><td class="rank">7</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1BAFWQhH9pNkz3mZDQ1tWrtKkSHVCkc3fV</span></td></tr>
+          <tr><td class="rank">8</td><td class="num">10,000.01</td><td class="mono">2025-07-04</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1CPaziTqeEixPoSFtJxu74uDGbpEAotZom</span></td></tr>
+          <tr><td class="rank">9</td><td class="num">4,154.25</td><td class="mono">2019-01-07 → 2019-04-02</td><td><span class="kind full">fully emptied</span></td><td><span class="addr">1FdjFtrBwf9Jc9fsGN2GtHmG2vs5ZcEuWH</span></td></tr>
+          <tr><td class="rank">10</td><td class="num">3,962.62</td><td class="mono">2025-07-24</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">15MZvKjqeNz4AVz2QrHumQcRJq2JVHjFUz</span></td></tr>
+          <tr><td class="rank">11</td><td class="num">2,000.00</td><td class="mono">2020-02-10</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1MsgeQMDKCqoPRfKT1tw8gGci6w7fCBtKe</span></td></tr>
+          <tr><td class="rank">12</td><td class="num">2,000.00</td><td class="mono">2018-04-25</td><td><span class="kind part">partially spent</span></td><td><span class="addr">1HZH6zHri1qc68s34MmE5MwG9xstbkFavo</span></td></tr>
+          <tr><td class="rank">13</td><td class="num">1,500.00</td><td class="mono">2020-02-10</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1MEzdoJiJG4USgJo7Q5N9w9i8VMkaJnMQX</span></td></tr>
+          <tr><td class="rank">14</td><td class="num">1,500.00</td><td class="mono">2020-02-10</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1H3JocD18dS2iPQvVF1p9NNYhX3Vd21dbL</span></td></tr>
+          <tr><td class="rank">15</td><td class="num">1,400.00</td><td class="mono">2020-02-10</td><td><span class="kind dust">drained to dust</span></td><td><span class="addr">1FhLExX7gBeq3v6qiMSe5KXrKVwKxZSkbJ</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">"Main exit" is the day on which the largest share of the address's net outflow occurred; where an address spent in several stages, the full span is shown. <span class="addr">1HZH…</span> left 0.00153 BTC behind in 2018, so it is not quite a ghost, but 99.9999% of its value was gone that morning. The 1,188.40 BTC address that used to appear at #15 is now #16.</p>
+
+    <div class="table-wrap">
+      <table>
+        <caption>Busiest days by value<span class="hint">Swipe sideways for all columns →</span></caption>
+        <thead>
+          <tr><th>Date</th><th class="num">Addresses</th><th class="num">BTC out</th><th>What it looks like</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">2025-07-04</td><td class="num">10</td><td class="num">80,010.33</td><td>Eight 10,000 BTC wallets drained over 11 hours</td></tr>
+          <tr><td class="mono">2020-02-10</td><td class="num">6</td><td class="num">6,402.00</td><td>Four 2012 wallets, four txs, 6,400 BTC; dust swept next day</td></tr>
+          <tr><td class="mono">2025-07-24</td><td class="num">2</td><td class="num">3,962.92</td><td>One 3,962 BTC ghost plus a 0.30 BTC emptying</td></tr>
+          <tr><td class="mono">2022-11-11</td><td class="num">9</td><td class="num">3,575.00</td><td>Seven 500 BTC ghosts drained on the day FTX filed</td></tr>
+          <tr><td class="mono">2019-01-07</td><td class="num">8</td><td class="num">2,144.68</td><td>First 2,001.71 BTC chunk of the largest exit</td></tr>
+          <tr><td class="mono">2018-04-25</td><td class="num">4</td><td class="num">2,051.07</td><td>The 2,000 BTC partial exit, plus 51 BTC from three others</td></tr>
+          <tr><td class="mono">2025-12-05</td><td class="num">10</td><td class="num">2,015.45</td><td>1,000 BTC emptied + 1,000 BTC ghost on the day</td></tr>
+          <tr><td class="mono">2019-07-20</td><td class="num">5</td><td class="num">2,001.73</td><td>Two 1,000 BTC ghosts; a third had moved on 17 July</td></tr>
+          <tr><td class="mono">2018-05-17</td><td class="num">4</td><td class="num">2,000.00</td><td>600 + 500 + 500 + 400 spent, balances retained</td></tr>
+          <tr><td class="mono">2020-01-24</td><td class="num">5</td><td class="num">1,891.81</td><td>Three 2012 wallets, two txs, 34 minutes apart</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Day totals are net outflow attributed to the snapshot coins, so they differ from the gross spend in the transaction. The 2024-03-26 batch now ranks thirteenth: 36 addresses, 1,701.21 BTC.</p>
+  </section>
+
+  <!-- ================= 12 METHOD ================= -->
+  <section id="method" class="reveal">
+    <div class="sec-head"><span class="sec-num">13</span><h2>How this was produced</h2></div>
+
+    <ol class="steps">
+      <li>Read all 92,083 addresses and their snapshot balances from the app's bundled <code>blockchain.sqlite</code>, and checked the total — 2,530,552.46 BTC — against the sum of the three ledger lines.</li>
+      <li>Resolved the current balance of every address via the <code>blockchain.info</code> balance API.</li>
+      <li>Selected every address whose balance had changed: <strong>9,990 addresses</strong>. Pulled each one's full transaction history — <strong>13,058 outgoing spend events</strong> in total — through <code>blockchain.info/multiaddr</code>, with <code>mempool.space</code> as a second source for the largest cases.</li>
+      <li>Walked each address's spends in chronological order and attributed value only up to its decline from snapshot to current balance. This prevents post-snapshot deposits that were later spent from being counted, and yields <strong>245,327.72 BTC</strong> of gross outflow, which reconciles with the CSV to within 0.07 BTC.</li>
+      <li>Dated each address's <strong>main exit</strong> to the day carrying the largest share of that attributed outflow. The yearly timeline, the twelve biggest days and the fifteen-largest-exits table are built from these attributions, not from the CSV's last-spend column.</li>
+      <li>Measured dormancy per coin: found the largest single output each address spent, traced it to the transaction that created it, and compared timestamps. Address age is never used as a proxy for coin age.</li>
+      <li>Re-checked the 34 × exactly-50 BTC batch individually. All 34 were 50 BTC coinbase rewards created between 7 August and 5 November 2010 — <strong>1,700 BTC</strong> in total — and the batch is one of <strong>24 days</strong> between November 2018 and September 2026 on which eight or more of the 723 spent 50 BTC wallets moved together.</li>
+      <li>Identified ghost wallets as funded addresses with a snapshot of ≥ 1 BTC and a current balance above zero but below 0.001 BTC: exactly <strong>502</strong>, holding 131,748.86 BTC at the snapshot and 0.02691 BTC today.</li>
+      <li>Re-ran the sweep for undated addresses until every emptied address had a date. The six that stayed dateless had no transaction history at all and turned out to hold zero at the snapshot.</li>
+      <li>Wrote the per-address result to <code>address-audit.csv</code> and computed the cohort statistics above from it.</li>
+    </ol>
+
+    <div class="note">
+      <strong>Output:</strong> <a href="./address-audit.csv">docs/address-audit.csv</a> — 92,083 rows, 7.0 MB, columns <code>address, snapshot_sats, current_sats, status, emptied_at_utc, emptying_txid</code>.<br>
+      <strong>Statuses:</strong> <code>still_funded</code> (84,260) · <code>emptied</code> (7,816) · <code>zero_at_snapshot</code> (7).
+    </div>
+
+    <blockquote class="pull">
+      <p>The CSV is the literal truth of the chain: an address with 17,835 sats is still funded. This article is the interpretation — that a wallet with 0.00018 BTC where 10,009 BTC used to be is, for every practical purpose, a ghost; and that the 2.26 million bitcoin which has not moved in fifteen years is what we mean by a zombie.</p>
+    </blockquote>
+  </section>
+
+  <footer>
+    <div class="foot-grid">
+      <div>
+        <p class="foot-sig">Zombie Bitcoins</p>
+        <p>A forensic audit of the address set bundled with Bitcoin Key Hunter. Audited 12 November 2026.</p>
+      </div>
+      <div>
+        <p><a href="./address-audit.csv">Download the full CSV →</a></p>
+        <p><a href="./zombie-bitcoins.md">Markdown version →</a></p>
+        <p><a href="#top">Back to top ↑</a></p>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</main>
+
+<div id="toast" role="status" aria-live="polite">Copied</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* reading progress */
+  var progress = document.getElementById("progress");
+  function updateProgress() {
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    var p = max > 0 ? window.scrollY / max : 0;
+    progress.style.transform = "scaleX(" + Math.min(1, Math.max(0, p)) + ")";
+  }
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  window.addEventListener("resize", updateProgress);
+  updateProgress();
+
+  /* reveal on scroll */
+  var revealEls = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.06 });
+    revealEls.forEach(function (el) { io.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add("in"); });
+  }
+
+  /* click-to-copy addresses and txids */
+  var toast = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg || "Copied";
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 1600);
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  }
+
+  document.querySelectorAll(".addr, .txhash").forEach(function (el) {
+    var raw = el.textContent.trim();
+    // only full-looking addresses / hashes are worth copying
+    if (raw.length < 25 || raw.indexOf("…") !== -1) return;
+    el.setAttribute("title", "Click to copy");
+    el.addEventListener("click", function () {
+      copyText(raw).then(function () {
+        showToast("Copied " + raw.slice(0, 8) + "…");
+      }).catch(function () {
+        showToast("Copy failed");
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
