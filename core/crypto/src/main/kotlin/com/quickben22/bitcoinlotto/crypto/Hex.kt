@@ -1,0 +1,32 @@
+package com.quickben22.bitcoinlotto.crypto
+
+object Hex {
+    private const val DIGITS = "0123456789abcdef"
+
+    fun encode(bytes: ByteArray): String {
+        val out = CharArray(bytes.size * 2)
+        var i = 0
+        for (b in bytes) {
+            val v = b.toInt() and 0xFF
+            out[i++] = DIGITS[v ushr 4]
+            out[i++] = DIGITS[v and 0x0F]
+        }
+        return String(out)
+    }
+
+    fun decode(hex: String): ByteArray {
+        require(hex.length % 2 == 0) { "Hex string must have an even length" }
+        val out = ByteArray(hex.length / 2)
+        for (i in out.indices) {
+            val hi = Character.digit(hex[i * 2], 16)
+            val lo = Character.digit(hex[i * 2 + 1], 16)
+            require(hi >= 0 && lo >= 0) { "Invalid hex character at index ${i * 2}" }
+            out[i] = ((hi shl 4) or lo).toByte()
+        }
+        return out
+    }
+}
+
+fun ByteArray.toHex(): String = Hex.encode(this)
+
+fun String.hexToByteArray(): ByteArray = Hex.decode(this)
