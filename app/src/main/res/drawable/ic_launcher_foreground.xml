@@ -1,47 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Magnifier with a bitcoin B: the original app mark, redrawn on a clean
+    108-unit grid. The ring and handle are strokes; the B is a filled
+    outline with two counters and four currency ticks. Everything is solid
+    white so nothing depends on gradient support for strokes.
+
+    Scale note: adaptive icons only show the central 72 of 108 units, so the
+    mark is sized to look the same as the original bitmap icon once cropped.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- lens ring -->
+    <path
+        android:pathData="M32,50A18,18 0 1 1 68,50A18,18 0 1 1 32,50Z"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="6" />
+
+    <!-- handle -->
+    <path
+        android:pathData="M64.85,64.85 L76.34,76.34"
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="6.5" />
+
+    <!-- bitcoin B -->
     <group
-        android:translateX="-2"
-        android:translateY="-1">
+        android:scaleX="0.88"
+        android:scaleY="0.88"
+        android:translateX="43.752"
+        android:translateY="38.56">
         <path
+            android:fillColor="#FFFFFFFF"
             android:fillType="evenOdd"
-            android:pathData="M52,24.5a25.5,25.5 0,1 1,0 51,25.5 25.5 0,0 1,0 -51Z M52,41.3a9.2,9.2 0,0 1,3.9 17.5l2.2,8.6a3.1,3.1 0,0 1,-3 3.8h-6.2a3.1,3.1 0,0 1,-3 -3.8l2.2,-8.6a9.2,9.2 0,0 1,3.9 -17.5Z"
-            android:strokeColor="#FF0B1A1D"
-            android:strokeWidth="1.5">
-            <aapt:attr name="android:fillColor">
-                <gradient
-                    android:type="linear"
-                    android:startX="52"
-                    android:startY="28"
-                    android:endX="58"
-                    android:endY="82"
-                    android:startColor="#FFF4FFFE"
-                    android:centerColor="#FF8CF0E5"
-                    android:endColor="#FF2BC9BB" />
-            </aapt:attr>
-        </path>
-        <path android:pathData="M64.67,68.33 L75.17,78.83 A3.3,3.3 0,0 0,79.83 74.17 L69.33,63.67 A3.3,3.3 0,0 0,64.67 68.33 Z">
-            <aapt:attr name="android:fillColor">
-                <gradient
-                    android:type="linear"
-                    android:startX="52"
-                    android:startY="28"
-                    android:endX="58"
-                    android:endY="82"
-                    android:startColor="#FFF4FFFE"
-                    android:centerColor="#FF8CF0E5"
-                    android:endColor="#FF2BC9BB" />
-            </aapt:attr>
-        </path>
+            android:pathData="M0,0 H8 C11.8,0 13.9,2.2 13.9,5.6 C13.9,8.4 12.2,10.5 9.9,11.4 C12.5,12.1 14.2,14.2 14.2,17.2 C14.2,22.2 11.2,26 6.6,26 H0 Z M5,4.3 H7.9 C9.4,4.3 10.3,5.3 10.3,6.7 C10.3,8.1 9.4,9.1 7.9,9.1 H5 Z M5,14.8 H8.4 C10.2,14.8 11.2,16 11.2,17.9 C11.2,19.8 10.2,21 8.4,21 H5 Z" />
         <path
-            android:pathData="M33.6,43.6a19,19 0,0 1,8.8 -11.2"
-            android:strokeColor="#38FFFFFF"
-            android:strokeLineCap="round"
-            android:strokeWidth="3" />
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M3.3,-3.5 H3.9 A1.1,1.1 0 0 1 5,-2.4 V-0.4 A1.1,1.1 0 0 1 3.9,0.7 H3.3 A1.1,1.1 0 0 1 2.2,-0.4 V-2.4 A1.1,1.1 0 0 1 3.3,-3.5 Z M9.7,-3.5 H10.3 A1.1,1.1 0 0 1 11.4,-2.4 V-0.4 A1.1,1.1 0 0 1 10.3,0.7 H9.7 A1.1,1.1 0 0 1 8.6,-0.4 V-2.4 A1.1,1.1 0 0 1 9.7,-3.5 Z M3.3,25.3 H3.9 A1.1,1.1 0 0 1 5,26.4 V28.4 A1.1,1.1 0 0 1 3.9,29.5 H3.3 A1.1,1.1 0 0 1 2.2,28.4 V26.4 A1.1,1.1 0 0 1 3.3,25.3 Z M9.7,25.3 H10.3 A1.1,1.1 0 0 1 11.4,26.4 V28.4 A1.1,1.1 0 0 1 10.3,29.5 H9.7 A1.1,1.1 0 0 1 8.6,28.4 V26.4 A1.1,1.1 0 0 1 9.7,25.3 Z" />
     </group>
 </vector>
