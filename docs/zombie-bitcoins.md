@@ -404,4 +404,6 @@ Every number above comes with a caveat, and the honest ones matter more than the
 
 **Statuses:** `still_funded` (84,260) · `emptied` (7,816) · `zero_at_snapshot` (7).
 
+<sub>The audit ran against the 92,083-row asset. The asset shipped with the app has since been narrowed to the 82,086 still-dormant addresses, so reading it today yields that subset; `docs/address-audit.csv` remains the full per-address record of all 92,083.</sub>
+
 *The CSV is the literal truth of the chain: an address with 17,835 sats is still funded. This article is the interpretation — that a wallet with 0.00018 BTC where 10,009 BTC used to be is, for every practical purpose, a ghost; and that the 2.26 million bitcoin which has not moved in fifteen years is what we mean by a zombie.*

@@ -31,7 +31,9 @@ class SqliteAddressRepository private constructor(
         private const val TABLE_NAME = "bitcoin"
         private const val PREFS_NAME = "address_database"
         private const val KEY_VERSION = "version"
-        private const val DATABASE_VERSION = 1
+        // Bump whenever the bundled asset changes so existing installs re-copy it.
+        // 2: asset now ships only the 82,086 still-dormant addresses.
+        private const val DATABASE_VERSION = 2
         private val installLock = Any()
 
         fun open(context: Context): SqliteAddressRepository {

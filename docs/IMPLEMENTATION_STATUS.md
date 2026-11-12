@@ -69,8 +69,9 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Moved the prepacked database to `core/data/src/main/assets/blockchain.sqlite`.
 - Implemented installation of the asset into the app database directory with a version marker.
 - Implemented read-only exact address lookup against table `bitcoin(_id, value)`.
-- Implemented row-count and fixture-address tests.
-- Current tested row count: `92,083` (including the six fixture addresses).
+- The shipped asset contains only addresses that are still dormant: status `still_funded` with a current balance at or above the snapshot balance, per `docs/zombie-bitcoins.md`.
+- Implemented row-count and cohort tests: the count is `82,086`, a still-dormant address is present, and a partially spent address, a ghost wallet, an emptied address, and a never-funded fixture address are all absent.
+- Current tested row count: `82,086` (7.1 MB asset, down from `92,083`).
 - Lookup intentionally ignores the `value` column.
 
 ### 3.4 Search
@@ -279,8 +280,8 @@ design. No throughput benchmark has been run.
    - Add a throughput benchmark on a physical device.
 
 2. **Add the missing database pipeline**
-   - Build-time generator that reproduces the `92,083`-row asset.
-   - Validation that all six fixtures are present and not duplicated.
+   - Build-time generator that reproduces the `82,086`-row still-dormant asset from `docs/address-audit.csv`.
+   - Validation that the asset matches the still-dormant set exactly, with no duplicates.
    - Legacy database migration if upgrade compatibility requires it.
 
 3. **Add UI and device tests**
@@ -293,7 +294,7 @@ design. No throughput benchmark has been run.
 4. **Complete release verification**
    - 30-minute foreground-service run with notification and Stop action.
    - Battery and thermal observation.
-   - Enter all three fixture private keys and confirm the guessed dialog.
+   - Confirm the guessed dialog using a debug-injected repository: the fixture keys are zero-at-snapshot and are no longer in the shipped still-dormant asset.
    - Confirm no private keys in logcat or crash reports.
 
 ### P2 — Quality and maintainability

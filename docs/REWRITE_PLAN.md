@@ -76,7 +76,7 @@ The current app (`com.quickben22.bitcoinlotto`) is a single-activity Java app us
 | Ads | AdMob + UMP consent; test IDs in debug builds only |
 | UI | Material 3, dark theme with cyan `#B3FFFF` identity |
 | Puzzle special case | Removed; all DB hits use one uniform "Address guessed!" flow |
-| Test fixtures | 3 known key pairs (6 addresses) added to the shipped DB in all builds |
+| Test fixtures | 3 known key pairs (6 addresses) kept as test-only fixtures; not in the shipped still-dormant asset |
 | Instrumented tests | Run locally, not in CI |
 
 ---
@@ -155,14 +155,14 @@ com.quickben22.bitcoinlotto
 
 Build-time generator (`tools/prepare-address-db`) will:
 
-1. Read the legacy `bitcoin` table from `app/src/main/assets/blockchain.sqlite`.
-2. Validate every row (`^1[1-9A-HJ-NP-Za-km-z]{25,34}$`), reject duplicates, report excluded rows.
-3. Append the six fixture address rows from `tools/fixtures/known_keys.json` with `value = 0`.
+1. Read the per-address audit in `docs/address-audit.csv`.
+2. Keep only still-dormant rows (`status = still_funded` and `current_sats >= snapshot_sats`); validate every kept address (`^1[1-9A-HJ-NP-Za-km-z]{25,34}$`), reject duplicates, report excluded rows.
+3. Do not append fixtures: the six fixture addresses are `zero_at_snapshot` and are excluded with the rest of the non-dormant cohort.
 4. Emit a Room-compatible `addresses.db` asset.
 5. Emit `bloom.bin` sized for the final row count (target false-positive rate 1%).
-6. Fail the build if the final count is not **92,083** or any fixture is missing/duplicated.
+6. Fail the build if the final count is not **82,086** or the kept set differs from the audit.
 
-The lookup must never filter on `value`; fixture rows have zero balance but must still match.
+The lookup must never filter on `value`. Fixtures remain in the codebase for fake-repository tests only.
 
 ### Room entities
 
@@ -189,7 +189,10 @@ data class SearchSession(
 - Delete the old database after a successful migration.
 - Migration is idempotent.
 
-### Fixture keys (shipped in all builds)
+### Fixture keys (test-only, not in the shipped asset)
+
+The shipped asset carries only still-dormant addresses, so the six fixture addresses
+(`zero_at_snapshot`) are excluded. They are used with fake repositories in tests.
 
 Generated with an independent reference implementation (Node/OpenSSL secp256k1), not with
 `CryptoClass`, and re-verified before merging.
@@ -363,8 +366,8 @@ No location, camera, microphone, contacts, storage, `QUERY_ALL_PACKAGES`,
 
 `AddressAssetContractTest` (Robolectric):
 
-- Opens the shipped `addresses.db` and asserts all six fixture addresses are present.
-- Asserts the row count is 92,083.
+- Opens the shipped `addresses.db` and asserts a still-dormant address is present.
+- Asserts the row count is 82,086 and that a ghost, an emptied address, and a fixture address are absent.
 
 ### Data tests (`:core:data`)
 
@@ -418,7 +421,7 @@ No location, camera, microphone, contacts, storage, `QUERY_ALL_PACKAGES`,
 | M0 | Tag current APK, record parity checklist, obtain upload keystore | Current behavior documented |
 | M1 | New Gradle project, version catalog, JDK 21 toolchain, Hilt/KSP, Detekt/Ktlint, CI, gitignore `.gradle-local/` and `.tools/` | `assembleDebug` and CI green |
 | M2 | `:core:crypto` with real secp256k1, Base58Check, WIF, fixtures, vectors | All crypto tests pass |
-| M3 | DB generator, Room entities, Bloom filter, legacy migration, asset contract test | 92,083 rows, all fixtures present, migration idempotent |
+| M3 | DB generator, Room entities, Bloom filter, legacy migration, asset contract test | 82,086 rows, still-dormant set matches the audit, migration idempotent |
 | M4 | `CheckPrivateKey` use case, `SearchEngine`, `SearchService`, notification-permission flow, remove puzzle branch | Fixture key reported immediately; search survives minimize/process death; FGS starts only from visible UI |
 | M5 | Compose Stats and Solver, guessed dialog, theme, privacy action | UI parity, accessibility, portrait/landscape/tablet |
 | M6 | UMP + AdMob, FLAG_SECURE, sensitive clipboard, encrypted session, backup disabled | No test ad IDs in release |
@@ -454,7 +457,7 @@ Manual release checklist:
 
 - 30-minute foreground-service run with progress and Stop action.
 - Battery and thermal observation.
-- Enter all three fixture private keys and confirm the guessed-address dialog.
+- Confirm the guessed-address dialog with a debug-injected repository; the fixture keys are not in the shipped still-dormant asset.
 - Confirm consent flow and privacy options entry point.
 - Verify no private keys appear in logcat or crash reports.
 
@@ -462,7 +465,7 @@ Manual release checklist:
 
 ## 12. Definition of done
 
-- Entering any fixture private key in Solver immediately shows the guessed-address dialog.
+- Entering any fixture private key in Solver, with a debug-injected fixture repository, immediately shows the guessed-address dialog.
 - Starting a search at a fixture key reports it without scanning.
 - Starting three keys before a fixture finds it after exactly three increments.
 - Bloom filter has zero false negatives; false positives never produce a hit.
@@ -482,7 +485,7 @@ Manual release checklist:
 | `dataSync` 6-hour timeout (Android 15+) | Avoid `dataSync`; use `specialUse` and implement `onTimeout()` defensively |
 | `POST_NOTIFICATIONS` denied | Keep the service running; explain the Task Manager fallback in the UI |
 | Battery and thermal limits during long searches | Measure on device, throttle UI updates, expose speed, allow pause/stop |
-| Fixture rows in the production DB | `value = 0`; documented as test rows; do not filter by balance |
+| Fixture rows in the production DB | Removed: the asset ships only still-dormant addresses; fixtures are test-only |
 | `minSdk` 21 to 24 bump | Small legacy user loss; required for modern libraries |
 | Instrumented tests not in CI | Enforced by the local release checklist and pre-release sign-off |
 

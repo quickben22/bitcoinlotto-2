@@ -1172,7 +1172,8 @@
 
     <div class="note">
       <strong>Output:</strong> <a href="./address-audit.csv">docs/address-audit.csv</a> — 92,083 rows, 7.0 MB, columns <code>address, snapshot_sats, current_sats, status, emptied_at_utc, emptying_txid</code>.<br>
-      <strong>Statuses:</strong> <code>still_funded</code> (84,260) · <code>emptied</code> (7,816) · <code>zero_at_snapshot</code> (7).
+      <strong>Statuses:</strong> <code>still_funded</code> (84,260) · <code>emptied</code> (7,816) · <code>zero_at_snapshot</code> (7).<br>
+      <small>The audit ran against the 92,083-row asset. The asset shipped with the app has since been narrowed to the 82,086 still-dormant addresses, so reading it today yields that subset; <code>address-audit.csv</code> remains the full per-address record of all 92,083.</small>
     </div>
 
     <blockquote class="pull">
