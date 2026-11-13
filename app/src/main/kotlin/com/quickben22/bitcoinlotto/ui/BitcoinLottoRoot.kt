@@ -7,6 +7,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,11 +36,11 @@ import androidx.navigation.compose.rememberNavController
 import com.quickben22.bitcoinlotto.BitcoinLottoApp
 import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.ads.AdBanner
-import com.quickben22.bitcoinlotto.ads.AdsConsentManager
 import com.quickben22.bitcoinlotto.feature.solver.SolverRoute
 import com.quickben22.bitcoinlotto.feature.stats.StatsRoute
 import com.quickben22.bitcoinlotto.ui.components.AppBackground
 import com.quickben22.bitcoinlotto.ui.components.PrivacyDialog
+import com.quickben22.bitcoinlotto.ui.components.SecureScreen
 import com.quickben22.bitcoinlotto.ui.components.findActivity
 
 private object Routes {
@@ -49,10 +51,12 @@ private object Routes {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BitcoinLottoRoot() {
+    SecureScreen()
     val context = LocalContext.current
     val app = context.applicationContext as BitcoinLottoApp
     val factory = remember(app) { AppViewModelFactory(app.container) }
-    val adsConsentManager = remember(app) { AdsConsentManager(app) }
+    val adsConsentManager = remember(app) { app.container.adsConsentManager }
+    val canRequestAds by adsConsentManager.adRequestsAllowed.collectAsStateWithLifecycle()
 
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -75,10 +79,10 @@ fun BitcoinLottoRoot() {
                 },
                 actions = {
                     Box {
-                        TextButton(onClick = { menuExpanded = true }) {
-                            Text(
-                                text = "\u22EE",
-                                style = MaterialTheme.typography.titleLarge,
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_more),
+                                contentDescription = stringResource(R.string.more_options),
                             )
                         }
                         DropdownMenu(
@@ -104,7 +108,7 @@ fun BitcoinLottoRoot() {
         },
         bottomBar = {
             Column {
-                AdBanner()
+                AdBanner(canRequestAds = canRequestAds)
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
                 ) {

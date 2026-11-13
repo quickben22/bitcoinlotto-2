@@ -4,7 +4,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 fun formatCount(value: Long): String =
-    NumberFormat.getIntegerInstance(Locale.US).format(value)
+    NumberFormat.getIntegerInstance().format(value)
 
 fun formatDuration(elapsedMillis: Long): String {
     val totalSeconds = (elapsedMillis / 1_000L).coerceAtLeast(0L)
@@ -12,9 +12,9 @@ fun formatDuration(elapsedMillis: Long): String {
     val minutes = (totalSeconds % 3_600L) / 60L
     val seconds = totalSeconds % 60L
     return if (hours > 0L) {
-        String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds)
+        String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
     } else {
-        String.format(Locale.US, "%02d:%02d", minutes, seconds)
+        String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
     }
 }
 
@@ -27,8 +27,8 @@ fun formatPrivateKey(hex: String, groupSize: Int = 32): String =
 
 fun formatSpeed(keysPerSecond: Double): String = when {
     keysPerSecond >= 1_000_000.0 ->
-        String.format(Locale.US, "%.1fM", keysPerSecond / 1_000_000.0)
+        String.format(Locale.getDefault(), "%.1fM", keysPerSecond / 1_000_000.0)
     keysPerSecond >= 1_000.0 ->
-        String.format(Locale.US, "%.1fk", keysPerSecond / 1_000.0)
-    else -> String.format(Locale.US, "%.0f", keysPerSecond)
+        String.format(Locale.getDefault(), "%.1fk", keysPerSecond / 1_000.0)
+    else -> String.format(Locale.getDefault(), "%.0f", keysPerSecond)
 }

@@ -2,6 +2,7 @@ package com.quickben22.bitcoinlotto.feature.solver
 
 import com.google.common.truth.Truth.assertThat
 import com.quickben22.bitcoinlotto.FakeAddressRepository
+import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.crypto.Hex
 import com.quickben22.bitcoinlotto.data.AddressRepository
 import com.quickben22.bitcoinlotto.data.FixtureAddresses
@@ -96,7 +97,7 @@ class SolverViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.state.value
-        assertThat(state.error).contains("64")
+        assertThat(state.error).isEqualTo(R.string.private_key_length_error)
         assertThat(state.derived).isNull()
         assertThat(state.guessed).isNull()
     }
@@ -157,6 +158,22 @@ class SolverViewModelTest {
         assertThat(state.guessed).isNull()
         assertThat(state.error).isNull()
         assertThat(state.showWalletKeys).isFalse()
+    }
+
+    @Test
+    fun `changing input before a check completes does not restore stale results`() = runTest {
+        val viewModel = createViewModel(
+            scheduler = testScheduler,
+            repository = FakeAddressRepository(setOf(FixtureAddresses.KEY_1_COMPRESSED)),
+        )
+        viewModel.onInputChange(KEY_1)
+        viewModel.onSetPrivateKey()
+        viewModel.onInputChange(KEY_2)
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.input).isEqualTo(KEY_2)
+        assertThat(viewModel.state.value.derived).isNull()
+        assertThat(viewModel.state.value.guessed).isNull()
     }
 
     @Test

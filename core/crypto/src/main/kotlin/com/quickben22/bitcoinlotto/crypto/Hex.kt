@@ -26,7 +26,3 @@ object Hex {
         return out
     }
 }
-
-fun ByteArray.toHex(): String = Hex.encode(this)
-
-fun String.hexToByteArray(): ByteArray = Hex.decode(this)

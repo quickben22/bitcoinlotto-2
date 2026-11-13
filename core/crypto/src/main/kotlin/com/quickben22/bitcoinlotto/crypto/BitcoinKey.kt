@@ -1,9 +1,10 @@
 package com.quickben22.bitcoinlotto.crypto
 
 class BitcoinKey private constructor(
-    val privateKey: ByteArray,
+    private val keyBytes: ByteArray,
     val compressed: Boolean,
 ) {
+    val privateKey: ByteArray get() = keyBytes.copyOf()
     val privateKeyHex: String get() = Hex.encode(privateKey)
 
     val publicKeyCompressed: ByteArray by lazy { Secp256k1.publicKey(privateKey, compressed = true) }
@@ -18,7 +19,7 @@ class BitcoinKey private constructor(
     fun addresses(): Set<String> = linkedSetOf(addressCompressed, addressUncompressed)
 
     override fun toString(): String =
-        "BitcoinKey(privateKey=$privateKeyHex, compressed=$compressed)"
+        "BitcoinKey(privateKey=[REDACTED], compressed=$compressed)"
 
     companion object {
         fun fromPrivateKey(privateKey: ByteArray, compressed: Boolean = true): BitcoinKey {
@@ -36,25 +37,4 @@ class BitcoinKey private constructor(
             return BitcoinKey(decoded.privateKey, decoded.compressed)
         }
     }
-}
-
-object BitcoinCrypto {
-    fun keyFromWif(wif: String): BitcoinKey = BitcoinKey.fromWif(wif)
-
-    fun keyFromPrivateKey(privateKey: ByteArray, compressed: Boolean = true): BitcoinKey =
-        BitcoinKey.fromPrivateKey(privateKey, compressed)
-
-    fun keyFromHex(privateKeyHex: String, compressed: Boolean = true): BitcoinKey =
-        BitcoinKey.fromHex(privateKeyHex, compressed)
-
-    fun addressesForWif(wif: String): Set<String> = BitcoinKey.fromWif(wif).addresses()
-
-    fun isValidWif(wif: String): Boolean = try {
-        Wif.decode(wif)
-        true
-    } catch (_: IllegalArgumentException) {
-        false
-    }
-
-    fun isValidP2pkhAddress(address: String): Boolean = BitcoinAddress.isP2pkh(address)
 }

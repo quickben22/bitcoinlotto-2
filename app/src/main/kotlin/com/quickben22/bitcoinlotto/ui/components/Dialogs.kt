@@ -1,6 +1,5 @@
 package com.quickben22.bitcoinlotto.ui.components
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
@@ -67,7 +66,6 @@ fun HitDialog(
                         privateKeyLabel,
                         hit.privateKeyHex,
                     )
-                    Toast.makeText(context, R.string.solver_copied, Toast.LENGTH_SHORT).show()
                 },
             ) {
                 Text(stringResource(R.string.hit_copy_key))
@@ -110,7 +108,6 @@ fun GuessedDialog(
                         addressLabel,
                         guessed.address,
                     )
-                    Toast.makeText(context, R.string.solver_copied, Toast.LENGTH_SHORT).show()
                 },
             ) {
                 Text(stringResource(R.string.hit_copy_address))

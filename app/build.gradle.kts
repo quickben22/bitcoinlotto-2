@@ -2,14 +2,18 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 val debugAdmobAppId = "ca-app-pub-3940256099942544~3347511713"
 val debugBannerUnitId = "ca-app-pub-3940256099942544/9214589741"
-val releaseAdmobAppId = providers.gradleProperty("admobAppId").getOrElse("")
-val releaseBannerUnitId = providers.gradleProperty("admobBannerUnitId").getOrElse("")
+val debugRewardedUnitId = "ca-app-pub-3940256099942544/5224354917"
+val releaseAdmobAppId = providers.gradleProperty("admobAppId")
+    .getOrElse("ca-app-pub-3535032153893847~2306137168")
+val releaseBannerUnitId = providers.gradleProperty("admobBannerUnitId")
+    .getOrElse("ca-app-pub-3535032153893847/3541547263")
+val releaseRewardedUnitId = providers.gradleProperty("admobRewardedUnitId")
+    .getOrElse("ca-app-pub-3535032153893847/3485706949")
 
 android {
     namespace = "com.quickben22.bitcoinlotto"
@@ -30,12 +34,14 @@ android {
             isMinifyEnabled = false
             manifestPlaceholders["admobAppId"] = debugAdmobAppId
             buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$debugBannerUnitId\"")
+            buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$debugRewardedUnitId\"")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             manifestPlaceholders["admobAppId"] = releaseAdmobAppId
             buildConfigField("String", "ADMOB_BANNER_UNIT_ID", "\"$releaseBannerUnitId\"")
+            buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$releaseRewardedUnitId\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -98,6 +104,7 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+    testImplementation(testFixtures(project(":core:data")))
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -105,11 +112,22 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.core)
 }
 
-val releaseTaskRequested = gradle.startParameter.taskNames.any { taskName ->
-    taskName.substringAfterLast(':') in setOf("assembleRelease", "bundleRelease")
-}
-if (releaseTaskRequested) {
-    check(releaseAdmobAppId.isNotBlank() && releaseBannerUnitId.isNotBlank()) {
-        "Release builds require -PadmobAppId=<app-id> and -PadmobBannerUnitId=<unit-id>."
+val validateReleaseAdIds = tasks.register("validateReleaseAdIds") {
+    inputs.property("admobAppId", releaseAdmobAppId)
+    inputs.property("admobBannerUnitId", releaseBannerUnitId)
+    inputs.property("admobRewardedUnitId", releaseRewardedUnitId)
+    doLast {
+        val appId = inputs.properties["admobAppId"] as String
+        val bannerId = inputs.properties["admobBannerUnitId"] as String
+        val rewardedId = inputs.properties["admobRewardedUnitId"] as String
+        val validAppId = Regex("""ca-app-pub-\d+~\d+""").matches(appId)
+        val validBannerId = Regex("""ca-app-pub-\d+/\d+""").matches(bannerId)
+        val validRewardedId = Regex("""ca-app-pub-\d+/\d+""").matches(rewardedId)
+        check(validAppId && validBannerId && validRewardedId) {
+            "Release builds require an AdMob app ID (ca-app-pub-...~...) and banner/rewarded unit IDs (ca-app-pub-.../...); supply -PadmobBannerUnitId and -PadmobRewardedUnitId."
+        }
     }
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(validateReleaseAdIds)
 }

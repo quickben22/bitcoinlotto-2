@@ -1,5 +1,6 @@
 package com.quickben22.bitcoinlotto.search
 
+import androidx.annotation.StringRes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,10 @@ data class SearchHit(
     val compressed: Boolean,
     val keysChecked: Long,
     val elapsedMillis: Long,
-)
+) {
+    override fun toString(): String =
+        "SearchHit(privateKeyHex=[REDACTED], address=$address, compressed=$compressed, keysChecked=$keysChecked, elapsedMillis=$elapsedMillis)"
+}
 
 data class SearchState(
     val status: SearchStatus = SearchStatus.Idle,
@@ -31,6 +35,7 @@ data class SearchState(
     val lastKeyHex: String = "",
     val hit: SearchHit? = null,
     val error: String? = null,
+    @StringRes val errorMessage: Int? = null,
 ) {
     val isRunning: Boolean get() = status == SearchStatus.Running
 }

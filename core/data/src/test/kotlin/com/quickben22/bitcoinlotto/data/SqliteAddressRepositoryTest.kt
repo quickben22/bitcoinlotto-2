@@ -18,6 +18,27 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35])
 class SqliteAddressRepositoryTest {
 
+    @Test
+    fun `public key lookup finds matching hash without encoding address`() {
+        val key = com.quickben22.bitcoinlotto.crypto.BitcoinKey.fromHex(
+            "d9eb4e2909d646dd931bb306a2b492475cff04097a2456416ec9b7dba5ac98b8",
+        )
+        val database = android.database.sqlite.SQLiteDatabase.create(null)
+        try {
+            database.execSQL("CREATE TABLE bitcoin (_id TEXT PRIMARY KEY, value INTEGER)")
+            database.execSQL(
+                "INSERT INTO bitcoin (_id, value) VALUES (?, ?)",
+                arrayOf<Any>(key.addressCompressed, 0L),
+            )
+            val repository = SqliteAddressRepository(database)
+            assertThat(repository.containsPublicKey(key.publicKeyCompressed)).isTrue()
+            val absent = com.quickben22.bitcoinlotto.crypto.BitcoinKey.fromHex("0".repeat(63) + "1")
+            assertThat(repository.containsPublicKey(absent.publicKeyCompressed)).isFalse()
+        } finally {
+            database.close()
+        }
+    }
+
     private val context: Context = RuntimeEnvironment.getApplication()
 
     @Test

@@ -58,6 +58,25 @@ class SearchCheckpointStoreTest {
     }
 
     @Test
+    fun `saving a hit atomically replaces checkpoint and keeps key encrypted`() = runTest {
+        val dataStore = createDataStore()
+        val store = SearchCheckpointStore(dataStore, createCipher())
+        val hit = SavedSearchHit(checkpoint().nextKeyHex, "address", true, 42L, 1500L)
+        store.save(checkpoint())
+
+        store.saveHit(hit, searchedKeysDelta = 42L)
+
+        assertThat(store.checkpoint.first()).isNull()
+        assertThat(store.hit.first()).isEqualTo(hit)
+        assertThat(store.searchAccess.first().totalKeysChecked).isEqualTo(42L)
+        assertThat(dataStore.data.first().asMap().values).doesNotContain(hit.privateKeyHex)
+        store.clear()
+        assertThat(store.hit.first()).isEqualTo(hit)
+        store.clearHit()
+        assertThat(store.hit.first()).isNull()
+    }
+
+    @Test
     fun `legacy plaintext checkpoint is migrated and removed`() = runTest {
         val dataStore = createDataStore()
         val legacy = checkpoint()
@@ -68,6 +87,7 @@ class SearchCheckpointStoreTest {
             preferences[stringPreferencesKey("start_key")] = legacy.startKeyHex
             preferences[longPreferencesKey("limit")] = legacy.limit ?: -1L
         }
+
         val store = SearchCheckpointStore(dataStore, createCipher())
 
         assertThat(store.checkpoint.first()).isEqualTo(legacy)
@@ -76,6 +96,25 @@ class SearchCheckpointStoreTest {
         assertThat(preferences[CHECKPOINT_CIPHERTEXT_KEY]).isNotNull()
         assertThat(preferences[stringPreferencesKey("next_key")]).isNull()
         assertThat(preferences[stringPreferencesKey("start_key")]).isNull()
+    }
+
+    @Test
+    fun `failed legacy migration preserves original checkpoint`() = runTest {
+        val dataStore = createDataStore()
+        val legacy = checkpoint()
+        dataStore.edit { preferences ->
+            preferences[stringPreferencesKey("next_key")] = legacy.nextKeyHex
+            preferences[stringPreferencesKey("start_key")] = legacy.startKeyHex
+        }
+        val failingCipher = object : CheckpointCipher {
+            override fun encrypt(plaintext: ByteArray): ByteArray = error("encryption unavailable")
+            override fun decrypt(ciphertext: ByteArray): ByteArray = error("decryption unavailable")
+        }
+
+        assertThat(runCatching { SearchCheckpointStore(dataStore, failingCipher).checkpoint.first() }.isFailure).isTrue()
+        val preferences = dataStore.data.first()
+        assertThat(preferences[stringPreferencesKey("next_key")]).isEqualTo(legacy.nextKeyHex)
+        assertThat(preferences[stringPreferencesKey("start_key")]).isEqualTo(legacy.startKeyHex)
     }
 
     @Test
@@ -93,7 +132,7 @@ class SearchCheckpointStoreTest {
     }
 
     @Test
-    fun `corrupted ciphertext fails safely`() = runTest {
+    fun `corrupted ciphertext reports an error`() = runTest {
         val dataStore = createDataStore()
         val store = SearchCheckpointStore(dataStore, createCipher())
         val corrupted = Base64.encodeToString(byteArrayOf(1, 2, 3, 4), Base64.NO_WRAP)
@@ -102,16 +141,16 @@ class SearchCheckpointStoreTest {
             preferences[CHECKPOINT_CIPHERTEXT_KEY] = corrupted
         }
 
-        assertThat(store.checkpoint.first()).isNull()
+        assertThat(runCatching { store.checkpoint.first() }.isFailure).isTrue()
     }
 
     @Test
-    fun `ciphertext from another keyset fails safely`() = runTest {
+    fun `ciphertext from another keyset reports an error`() = runTest {
         val dataStore = createDataStore()
         SearchCheckpointStore(dataStore, createCipher()).save(checkpoint())
         val store = SearchCheckpointStore(dataStore, createCipher())
 
-        assertThat(store.checkpoint.first()).isNull()
+        assertThat(runCatching { store.checkpoint.first() }.isFailure).isTrue()
     }
 
     private fun TestScope.createStore(): SearchCheckpointStore =

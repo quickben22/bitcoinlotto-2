@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.quickben22.bitcoinlotto.crypto.Hex
 import com.quickben22.bitcoinlotto.data.SearchCheckpoint
 import com.quickben22.bitcoinlotto.data.SearchCheckpointStore
+import com.quickben22.bitcoinlotto.data.SearchAccess
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyGenerator
 import com.quickben22.bitcoinlotto.search.SearchController
 import com.quickben22.bitcoinlotto.search.SearchStateHolder
@@ -23,8 +24,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class StatsViewModelTest {
 
     private val stateHolder = SearchStateHolder()
@@ -52,7 +58,7 @@ class StatsViewModelTest {
         advanceUntilIdle()
 
         assertThat(controller.starts).containsExactly(
-            RecordingController.Start("ab", 10L, resume = true),
+            RecordingController.Start("ab", null, resume = true),
         )
         assertThat(controller.stops).isEqualTo(0)
     }
@@ -73,7 +79,7 @@ class StatsViewModelTest {
     }
 
     @Test
-    fun `a checkpoint read failure falls back to a fresh random key`() = runTest {
+    fun `a checkpoint read failure reports an error instead of starting a new search`() = runTest {
         val store = mockk<SearchCheckpointStore>()
         every { store.checkpoint } returns flow { error("checkpoint unavailable") }
         val controller = RecordingController()
@@ -82,9 +88,8 @@ class StatsViewModelTest {
         viewModel.startOrStop()
         advanceUntilIdle()
 
-        assertThat(controller.starts).containsExactly(
-            RecordingController.Start(KEY_1, limit = null, resume = false),
-        )
+        assertThat(controller.starts).isEmpty()
+        assertThat(viewModel.state.value.status).isEqualTo(SearchStatus.Error)
     }
 
     @Test
@@ -108,6 +113,8 @@ class StatsViewModelTest {
     ): StatsViewModel {
         val dispatcher = StandardTestDispatcher(scheduler)
         Dispatchers.setMain(dispatcher)
+        every { store.hit } returns flowOf(null)
+        every { store.searchAccess } returns flowOf(SearchAccess())
         return StatsViewModel(
             searchStateHolder = stateHolder,
             checkpointStore = store,

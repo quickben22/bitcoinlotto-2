@@ -14,7 +14,7 @@ class WifKey(
 
     override fun hashCode(): Int = 31 * privateKey.contentHashCode() + compressed.hashCode()
 
-    override fun toString(): String = "WifKey(privateKey=$privateKeyHex, compressed=$compressed)"
+    override fun toString(): String = "WifKey(privateKey=[REDACTED], compressed=$compressed)"
 }
 
 object Wif {
