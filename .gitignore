@@ -15,3 +15,11 @@ build/
 *.apk
 *.aab
 *.log
+
+# Signing material — never commit keys, keystores, or certificates
+*.keystore
+*.jks
+*.keyInfo
+*.der
+/pfx/
+keystore.properties
