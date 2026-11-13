@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -15,6 +16,22 @@ val releaseBannerUnitId = providers.gradleProperty("admobBannerUnitId")
 val releaseRewardedUnitId = providers.gradleProperty("admobRewardedUnitId")
     .getOrElse("ca-app-pub-3535032153893847/3485706949")
 
+// Release signing is configured outside version control: see keystore.properties.example.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.isFile) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+val signingStoreFile = keystoreProperties.getProperty("storeFile").orEmpty().trim()
+val signingStorePassword = keystoreProperties.getProperty("storePassword").orEmpty().trim()
+val signingKeyAlias = keystoreProperties.getProperty("keyAlias").orEmpty().trim()
+val signingKeyPassword = keystoreProperties.getProperty("keyPassword").orEmpty().trim()
+val hasReleaseSigning = signingStoreFile.isNotEmpty() &&
+    signingStorePassword.isNotEmpty() &&
+    signingKeyAlias.isNotEmpty() &&
+    signingKeyPassword.isNotEmpty()
+
 android {
     namespace = "com.quickben22.bitcoinlotto"
     compileSdk = 37
@@ -27,6 +44,20 @@ android {
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(signingStoreFile)
+                storePassword = signingStorePassword
+                keyAlias = signingKeyAlias
+                keyPassword = signingKeyPassword
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
     }
 
     buildTypes {
@@ -46,6 +77,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
         }
     }
 
