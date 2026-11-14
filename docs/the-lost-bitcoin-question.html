@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A New York lawsuit wants to award 39,069 dormant Bitcoin wallets to the man who found them—without a single key. An audit of 92,083 old addresses asks who owns what nobody can open, and whether a lost key is ever truly gone.">
+  <title>Are Lost Bitcoins Anyone's? — A New York Lawsuit, 82,086 Silent Wallets, and the Hunt for a Key</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #ece7dd;
+      --ink-dim: #c9c3b7;
+      --muted: #a7a0a0;
+      --paper: #0b0a0e;
+      --panel: #14121b;
+      --panel-2: #191622;
+      --line: rgba(255, 255, 255, .1);
+      --line-strong: rgba(255, 255, 255, .2);
+      --amber: #f7931a;
+      --amber-soft: #ffb454;
+      --gold: #e7c07b;
+      --dust: #9da6ff;
+      --gold-pale: rgba(247, 147, 26, .08);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1000px 580px at 78% -10%, rgba(247, 147, 26, .13), transparent 62%),
+        radial-gradient(850px 460px at 5% 2%, rgba(124, 134, 232, .08), transparent 60%),
+        var(--paper);
+      color: var(--ink);
+      font: 18px/1.72 var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: rgba(247, 147, 26, .3); color: #fff; }
+    a { color: var(--amber-soft); text-decoration: none; border-bottom: 1px solid rgba(255, 180, 84, .32); }
+    a:hover { color: #ffd098; border-bottom-color: var(--amber-soft); }
+    a:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    .table-wrap:focus-visible, .svg-scroll:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      z-index: 3;
+      padding: .65rem 1rem;
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .skip-link:focus { left: 1rem; top: 1rem; }
+
+    .masthead {
+      padding: 1rem max(1.25rem, calc((100% - 1120px) / 2));
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 10, 14, .82);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: .76rem;
+      font-weight: 750;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      padding: clamp(3rem, 8vw, 7rem) max(1.25rem, calc((100% - 1120px) / 2)) 3rem;
+      background:
+        radial-gradient(ellipse at 87% 14%, rgba(247, 147, 26, .12), transparent 30rem),
+        linear-gradient(145deg, rgba(20, 18, 27, .88), rgba(11, 10, 14, .24));
+    }
+
+    .eyebrow {
+      margin: 0 0 .8rem;
+      color: var(--amber);
+      font-family: var(--sans);
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1, h2, h3 {
+      font-family: var(--serif);
+      line-height: 1.14;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin-bottom: 1.1rem;
+      font-size: clamp(2.8rem, 7vw, 5.8rem);
+      font-weight: 500;
+      letter-spacing: -.045em;
+    }
+
+    .deck {
+      max-width: 760px;
+      margin-bottom: 1.25rem;
+      color: var(--ink-dim);
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      line-height: 1.48;
+    }
+
+    .byline {
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: .9rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .8rem;
+      max-width: 1120px;
+      margin: 2.4rem auto 0;
+      padding: 0;
+    }
+
+    .metrics > div {
+      min-height: 118px;
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(25, 22, 34, .94), rgba(17, 15, 23, .94));
+      box-shadow: 0 20px 50px -35px rgba(0, 0, 0, .9);
+    }
+
+    .metrics dt {
+      color: var(--amber-soft);
+      font-family: var(--sans);
+      font-size: clamp(1.45rem, 2.5vw, 2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metrics dd {
+      margin: .45rem 0 0;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: .84rem;
+      line-height: 1.4;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 220px) minmax(0, 760px);
+      gap: clamp(2rem, 6vw, 5rem);
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 5rem;
+    }
+
+    .contents {
+      align-self: start;
+      position: sticky;
+      top: 1rem;
+      padding: 1rem 0;
+      font: .88rem/1.5 var(--sans);
+    }
+
+    .contents h2 {
+      margin-bottom: .8rem;
+      font: 750 .75rem/1.2 var(--sans);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .contents ol {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .contents li { margin: .45rem 0; }
+
+    article { min-width: 0; }
+
+    section {
+      padding: 0 0 2.7rem;
+      margin: 0 0 2.6rem;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 1rem;
+    }
+
+    section:last-child { border-bottom: 0; }
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: clamp(1.9rem, 4vw, 2.65rem);
+      letter-spacing: -.025em;
+    }
+
+    h3 {
+      margin: 1.8rem 0 .65rem;
+      font-size: 1.38rem;
+    }
+
+    .lede {
+      color: var(--ink-dim);
+      font-family: var(--serif);
+      font-size: 1.23rem;
+      line-height: 1.55;
+    }
+
+    .callout {
+      margin: 1.5rem 0;
+      padding: 1.1rem 1.25rem;
+      border: 1px solid rgba(247, 147, 26, .22);
+      border-left: 4px solid var(--amber);
+      border-radius: 0 8px 8px 0;
+      background: var(--gold-pale);
+    }
+
+    .callout strong { color: var(--gold); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1.3rem 0 .4rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      -webkit-overflow-scrolling: touch;
+      box-shadow: 0 20px 50px -35px rgba(0, 0, 0, .9);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font: .84rem/1.5 var(--sans);
+      line-height: 1.45;
+      font-variant-numeric: tabular-nums;
+    }
+
+    caption {
+      padding: .9rem 1rem;
+      color: var(--ink-dim);
+      font: 750 .76rem/1.4 var(--sans);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    th, td {
+      padding: .72rem .8rem;
+      border-top: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    thead th {
+      background: rgba(255, 255, 255, .035);
+      color: var(--ink-dim);
+      font-family: var(--sans);
+      font-size: .78rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(even) { background: rgba(255, 255, 255, .018); }
+    tbody tr:hover { background: rgba(255, 255, 255, .035); }
+    td { color: var(--ink-dim); }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .txid { overflow-wrap: anywhere; }
+    table.wide { min-width: 640px; }
+
+    .note {
+      color: var(--muted);
+      font-size: .87rem;
+      line-height: 1.55;
+      font-family: var(--sans);
+    }
+
+    .chart {
+      margin: 1.3rem 0;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: 0 20px 50px -35px rgba(0, 0, 0, .9);
+    }
+
+    .chart figcaption {
+      margin-bottom: 1rem;
+      color: var(--ink-dim);
+      font: 750 .76rem/1.4 var(--sans);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .bars {
+      display: grid;
+      gap: .55rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 3.2rem minmax(2rem, 1fr) 6.8rem;
+      align-items: center;
+      gap: .7rem;
+      font: .82rem/1.35 var(--sans);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-track {
+      display: flex;
+      height: 1rem;
+      overflow: hidden;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, .045);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+    }
+
+    .bar-segment {
+      display: block;
+      height: 100%;
+      min-width: 1px;
+    }
+
+    .bar-emptied {
+      background: repeating-linear-gradient(135deg, #f7931a 0 6px, #c96f06 6px 9px);
+    }
+
+    .bar-residual {
+      background: repeating-linear-gradient(135deg, #9da6ff 0 4px, #555fae 4px 7px);
+    }
+
+    .bar-value { text-align: right; white-space: nowrap; }
+
+    .bar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem 1.2rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font: .8rem/1.4 var(--sans);
+    }
+
+    .bar-legend span { display: inline-flex; align-items: center; gap: .5rem; }
+
+    .legend-mark {
+      width: 1rem;
+      height: .8rem;
+      border: 1px solid rgba(255, 255, 255, .24);
+      border-radius: 2px;
+    }
+
+    .legend-mark.emptied {
+      background: repeating-linear-gradient(135deg, #f7931a 0 4px, #c96f06 4px 6px);
+    }
+
+    .legend-mark.residual {
+      background: repeating-linear-gradient(135deg, #9da6ff 0 3px, #555fae 3px 5px);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .cumulative-chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-width: 680px;
+      overflow: visible;
+      font-family: var(--sans);
+    }
+
+    .svg-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-grid { stroke: rgba(255, 255, 255, .12); stroke-width: 1; }
+    .chart-axis { fill: var(--muted); font-size: 11px; }
+    .chart-line {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chart-point {
+      fill: var(--panel);
+      stroke: var(--amber-soft);
+      stroke-width: 2.5;
+    }
+
+    .chart-point-peak { fill: var(--amber); }
+
+    .chart-key {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin-top: .65rem;
+      color: var(--muted);
+      font: .8rem/1.4 var(--sans);
+    }
+
+    .chart-key-mark {
+      width: 1.2rem;
+      border-top: 3px solid var(--amber);
+      position: relative;
+    }
+
+    .chart-key-mark::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      top: -4px;
+      left: 7px;
+      border: 1px solid var(--amber-soft);
+      border-radius: 50%;
+      background: var(--panel);
+    }
+
+    .sources li { margin: .55rem 0; }
+
+    footer {
+      padding: 1.7rem 1.25rem;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: .84rem;
+      font-family: var(--sans);
+      text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; gap: 1rem; }
+      .contents { position: static; padding: 0 0 1rem; }
+      .contents ol { columns: 2; column-gap: 2rem; }
+    }
+
+    @media (max-width: 480px) {
+      body { font-size: 16px; }
+      .metrics { gap: .55rem; }
+      .metrics > div { min-height: 105px; padding: .8rem; }
+      .bar-row { grid-template-columns: 2.6rem minmax(1.5rem, 1fr); gap: .4rem .55rem; }
+      .bar-value { grid-column: 2; font-size: .74rem; }
+      .chart { padding: .8rem; }
+      .chart-axis { font-size: 12px; }
+      th, td { padding: .62rem .65rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    @media print {
+      :root {
+        color-scheme: light;
+        --ink: #111;
+        --ink-dim: #333;
+        --muted: #555;
+        --panel: #fff;
+        --panel-2: #f5f5f5;
+        --line: rgba(0, 0, 0, .18);
+        --line-strong: rgba(0, 0, 0, .3);
+        --amber: #b35c00;
+        --amber-soft: #8a4600;
+        --gold: #6b4a00;
+        --gold-pale: #fff4e0;
+      }
+      body { background: #fff; color: #111; }
+      .hero { background: none; }
+      .masthead, footer { background: #fff; color: #555; }
+      .metrics > div { background: #fff; }
+      thead th { background: rgba(0, 0, 0, .06); }
+      .chart, .table-wrap, .metrics > div { box-shadow: none; }
+      .contents { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <div class="masthead">Bitcoin Key Hunter · Research</div>
+
+  <header class="hero">
+    <p class="eyebrow">On-chain audit · The Noah Doe lawsuit · November 2026</p>
+    <h1>Are lost bitcoins anyone's?</h1>
+    <p class="deck">A New York lawsuit wants to hand 39,069 silent wallets—and 3.8 million BTC—to the man who found them. He holds no keys. An audit of 92,083 old addresses asks who really owns what nobody can open, and whether a lost key is ever truly gone.</p>
+    <p class="byline">Balances checked through 11 November 2026 · Bitcoin Key Hunter research</p>
+
+    <dl class="metrics" aria-label="Key figures">
+      <div><dt>92,083</dt><dd>addresses in the historical list</dd></div>
+      <div><dt>2.26 million BTC</dt><dd>still in addresses that never spent</dd></div>
+      <div><dt>9,990</dt><dd>addresses that proved a key existed</dd></div>
+      <div><dt>39,069</dt><dd>wallets named in the lawsuit</dd></div>
+      <div><dt>3.8 million BTC</dt><dd>claimed without a key</dd></div>
+      <div><dt>82,086</dt><dd>wallets you can search in the app</dd></div>
+    </dl>
+  </header>
+
+  <div class="layout">
+    <nav class="contents" aria-label="Article contents">
+      <h2>In this article</h2>
+      <ol>
+        <li><a href="#question">The mystery of lost keys</a></li>
+        <li><a href="#audit">The ledger</a></li>
+        <li><a href="#timeline">When the lost came back</a></li>
+        <li><a href="#old-outputs">How long the coins slept</a></li>
+        <li><a href="#july">The July 2025 transfers</a></li>
+        <li><a href="#case-studies">Other set pieces</a></li>
+        <li><a href="#large-balances">The coins that stayed</a></li>
+        <li><a href="#lawsuit">The lawsuit that says silence means surrender</a></li>
+        <li><a href="#key-search">The hunt for a lost key</a></li>
+      </ol>
+    </nav>
+
+    <article id="article">
+      <section id="question">
+        <h2>The mystery of lost keys</h2>
+        <p class="lede">A bitcoin address is a lock. A private key is the only key. Everything else—a court order, a statute, a claim of ownership—is an argument about who is allowed to turn it.</p>
+        <p>A key might be buried in an old backup, locked behind a forgotten password, or held by someone perfectly content to wait. If it is gone for good, the bitcoin stays visible but unreachable. The blockchain leaves no message saying which story is true.</p>
+        <p>In March 2026, a New York lawsuit tried to settle the question without a key. <em>ABC Company, XYZ Company, and Noah Doe v. John Does 1–39,069</em> asks a court to declare that a pseudonymous plaintiff owns <strong>39,069 dormant addresses and everything in them</strong>—about 3.8 million BTC, worth roughly $293 billion at the May snapshot. The plaintiffs do not hold the private keys. They argue they do not need them: under New York's lost-property statute, Noah Doe is a <strong>finder</strong> who reported the property to police, gave notice, waited, and says title has already passed to him.</p>
+        <p>Which raises the question this article is really about: <strong>are lost bitcoins anyone's?</strong> The lawsuit offers one answer—ownership by paperwork. The chain offers another—ownership by signature. This audit sits between the two.</p>
+        <p>It is easy to mock the case. It is harder to answer, because it rests on the same premise as nearly every estimate of lost bitcoin—including ours: that a wallet silent for years is a wallet whose owner is gone. In 2018 we built the list behind Bitcoin Key Hunter on exactly that premise. Eight years later, the results are the closest thing this debate has to a controlled experiment.</p>
+
+        <h3>Where the list came from</h3>
+        <p>This was no random sample. The Bitcoin Key Hunter app ships with a list built in <strong>2018</strong> using one stark filter: legacy <code>1…</code> addresses that had not sent a single satoshi out for more than seven years. It held <strong>92,083 addresses</strong> and <strong>2,530,552.46 BTC</strong>—more than one bitcoin in eight ever mined.</p>
+        <p>The audit asked two questions: is the money still there, and if not, when did it leave? All 92,083 balances were checked. <strong>9,990</strong> addresses showed outgoing activity; <strong>7,816</strong> were fully emptied. The other <strong>82,086</strong> never spent a satoshi.</p>
+      </section>
+
+      <section id="audit">
+        <h2>The ledger</h2>
+        <p><strong>About 2.26 million BTC remains in the addresses that never spent.</strong> That is 82,086 addresses—89.2% of the list—holding 2,256,802.64 BTC. Long inactivity may point to lost keys, but it cannot rule out owners who chose not to move.</p>
+        <p><strong>Roughly 245,000 BTC left addresses that proved they could still sign.</strong> The outflows came from 9,990 addresses: 9.7% of the snapshot's value and 10.8% of its addresses. Of those, 7,816 were fully emptied, 502 were drained to a residue, and 1,672 made partial exits. The remaining <strong>28,465.27 BTC</strong>—1.1% of the snapshot—stayed in partially spent addresses.</p>
+
+        <div class="table-wrap" role="region" aria-label="Lower-balance address summary table" tabindex="0">
+          <table>
+            <caption>The list, split by what happened to it</caption>
+            <thead>
+              <tr>
+                <th scope="col">Group</th>
+                <th scope="col" class="num">Addresses</th>
+                <th scope="col" class="num">BTC at snapshot</th>
+                <th scope="col" class="num">BTC today</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">No outgoing spend recorded</th><td class="num">82,086</td><td class="num">2,256,759.10</td><td class="num">2,256,802.64</td></tr>
+              <tr><th scope="row">Proved able to spend</th><td class="num">9,990</td><td class="num">273,793.36</td><td class="num">28,465.27</td></tr>
+              <tr><th scope="row">Of these: fully emptied</th><td class="num">7,816</td><td class="num">101,532.01</td><td class="num">0</td></tr>
+              <tr><th scope="row">Of these: drained to a small residue</th><td class="num">502</td><td class="num">131,748.86</td><td class="num">0.0269</td></tr>
+              <tr><th scope="row">Of these: partial exits</th><td class="num">1,672</td><td class="num">40,512.49</td><td class="num">28,465.24</td></tr>
+              <tr><th scope="row">Never funded (zero at snapshot)</th><td class="num">7</td><td class="num">0</td><td class="num">0</td></tr>
+              <tr><th scope="row">Total</th><td class="num">92,083</td><td class="num">2,530,552.46</td><td class="num">2,285,267.90</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">The no-spend group holds 43.54 BTC more than at the snapshot—incoming change and dust, not accumulation. Overall net outflow was 245,284.56 BTC. Figures are rounded. <strong>Correction:</strong> an earlier edition counted 82,093 no-spend addresses; that figure included seven addresses that never held funds. The correct count is 82,086.</p>
+      </section>
+
+      <section id="timeline">
+        <h2>When the lost came back</h2>
+        <p>The year-by-year view covers all <strong>9,990 addresses that spent something</strong>, including those that kept a residue.</p>
+
+        <figure class="chart">
+          <figcaption>BTC that left, by year</figcaption>
+          <ol class="bars">
+            <li class="bar-row"><span>2018</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:13.72%"></span><span class="bar-segment bar-residual" style="width:7.14%"></span></span><span class="bar-value">19,991.65 BTC</span><span class="sr-only">Fully emptied: 13,148.09 BTC. Left a balance: 6,843.56 BTC.</span></li>
+            <li class="bar-row"><span>2019</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:20.06%"></span><span class="bar-segment bar-residual" style="width:13.52%"></span></span><span class="bar-value">32,181.87 BTC</span><span class="sr-only">Fully emptied: 19,223.69 BTC. Left a balance: 12,958.18 BTC.</span></li>
+            <li class="bar-row"><span>2020</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:15.76%"></span><span class="bar-segment bar-residual" style="width:10.27%"></span></span><span class="bar-value">24,946.16 BTC</span><span class="sr-only">Fully emptied: 15,103.76 BTC. Left a balance: 9,842.40 BTC.</span></li>
+            <li class="bar-row"><span>2021</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:17.80%"></span><span class="bar-segment bar-residual" style="width:7.07%"></span></span><span class="bar-value">23,835.03 BTC</span><span class="sr-only">Fully emptied: 17,056.52 BTC. Left a balance: 6,778.52 BTC.</span></li>
+            <li class="bar-row"><span>2022</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:5.10%"></span><span class="bar-segment bar-residual" style="width:6.89%"></span></span><span class="bar-value">11,489.62 BTC</span><span class="sr-only">Fully emptied: 4,886.29 BTC. Left a balance: 6,603.34 BTC.</span></li>
+            <li class="bar-row"><span>2023</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:6.51%"></span><span class="bar-segment bar-residual" style="width:6.35%"></span></span><span class="bar-value">12,322.28 BTC</span><span class="sr-only">Fully emptied: 6,236.44 BTC. Left a balance: 6,085.84 BTC.</span></li>
+            <li class="bar-row"><span>2024</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:12.27%"></span><span class="bar-segment bar-residual" style="width:3.81%"></span></span><span class="bar-value">15,408.78 BTC</span><span class="sr-only">Fully emptied: 11,761.68 BTC. Left a balance: 3,647.10 BTC.</span></li>
+            <li class="bar-row"><span>2025</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:8.51%"></span><span class="bar-segment bar-residual" style="width:91.49%"></span></span><span class="bar-value">95,845.20 BTC</span><span class="sr-only">Fully emptied: 8,154.12 BTC. Left a balance: 87,691.07 BTC.</span></li>
+            <li class="bar-row"><span>2026*</span><span class="bar-track" aria-hidden="true"><span class="bar-segment bar-emptied" style="width:6.22%"></span><span class="bar-segment bar-residual" style="width:3.49%"></span></span><span class="bar-value">9,307.14 BTC</span><span class="sr-only">Fully emptied: 5,961.36 BTC. Left a balance: 3,345.78 BTC.</span></li>
+          </ol>
+          <div class="bar-legend" aria-label="Graph key">
+            <span><i class="legend-mark emptied" aria-hidden="true"></i>Fully emptied</span>
+            <span><i class="legend-mark residual" aria-hidden="true"></i>Left a balance</span>
+          </div>
+        </figure>
+
+        <p>For seven years, outflow ran from about 11,000 to 32,000 BTC a year. Then came 2025: <strong>95,845 BTC, 39% of the audit's total</strong>, with <strong>87,240 BTC coming from just 60 of the 502 near-empty addresses</strong>. By the end of 2024, cumulative outflow had reached 140,175 BTC; one day in July 2025 supplied much of the rest.</p>
+        <p class="note">*2026 is year-to-date through 11 November. An address can appear in more than one year. Annual figures are gross outflow.</p>
+      </section>
+
+      <section id="old-outputs">
+        <h2>How long the coins slept</h2>
+        <p>An address can be old without every coin inside it being old. Tracing each spent coin back to the transaction that created it gives a more textured answer than the address alone.</p>
+
+        <div class="table-wrap" role="region" aria-label="Selected output funding dates and ages" tabindex="0">
+          <table>
+            <caption>Dormancy of the largest single coins</caption>
+            <thead>
+              <tr>
+                <th scope="col">Coins that moved</th>
+                <th scope="col">Dormant for</th>
+                <th scope="col">Moved on</th>
+                <th scope="col">Funded</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">One 3,962.62 BTC pile</th><td>14.5 yrs</td><td>2025-07-24</td><td>15 Jan 2011</td></tr>
+              <tr><th scope="row">Eight ~10,000 BTC wallets — 80,009 BTC</th><td>14.2–14.3 yrs</td><td>2025-07-04</td><td>2 Apr – 4 May 2011</td></tr>
+              <tr><th scope="row">Thirty-four 50 BTC wallets — 1,700 BTC</th><td>13.4–13.6 yrs</td><td>2024-03-26</td><td>7 Aug – 5 Nov 2010</td></tr>
+              <tr><th scope="row">Seven 500 BTC wallets — 3,500 BTC</th><td>11.3 yrs</td><td>2022-11-11</td><td>10 Jul 2011</td></tr>
+              <tr><th scope="row">Four wallets — 6,400 BTC</th><td>7.5–7.9 yrs</td><td>2020-02-10</td><td>8 Mar – 23 Aug 2012</td></tr>
+              <tr><th scope="row">One address — 4,154.25 BTC</th><td>7.0 yrs</td><td>2019-04-02</td><td>19 Apr 2012</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">“Dormant for” measures the time from the creation of the largest single output an address spent to the transaction that spent it. An address that spends in several transactions may hold coins of different ages.</p>
+        <p>The 2024 and 2025 examples had waited <strong>13 to 14.5 years</strong>. Earlier ones ranged from <strong>5.4 to 11.3 years</strong>, most around seven or eight—exactly the floor a seven-year filter would produce.</p>
+      </section>
+
+      <section id="july">
+        <h2>The July 2025 transfers</h2>
+        <p>On <strong>4 July 2025</strong>, eight addresses that had each held about 10,000 BTC were drained in sequence between 03:39 and 14:54 UTC—<strong>80,009.33 BTC</strong>, each leaving a residue of 14,000 to 43,000 satoshis. The coins had been funded between 2 April and 4 May 2011, making them <strong>14.2 to 14.3 years</strong> old. In this dataset, that was not an anomaly. It was the entry criterion.</p>
+        <p>Twenty days later, another giant moved: <code>15MZvKjqeNz4AVz2QrHumQcRJq2JVHjFUz</code> sent <strong>3,962.62 BTC</strong> and kept 16,984 satoshis. On <strong>25 July</strong>, Galaxy Digital disclosed that it had sold more than <strong>80,000 BTC</strong>—over $9 billion—for a “Satoshi-era investor” as part of estate planning. CoinDesk linked the sale to the July transfers, though Galaxy did not identify the addresses. The 4 July move fell on a US holiday, with markets closed and no crypto news to react to—and the size of the transfer became the day's story.</p>
+        <div class="callout">
+          <strong>A wallet can be silent for fourteen years and still have an owner, a lawyer and a trading desk.</strong> The moves show that someone could sign. They do not show who, or why.
+        </div>
+      </section>
+
+      <section id="case-studies">
+        <h2>Other set pieces</h2>
+        <p>The totals say how much. The sequences say how differently money can leave.</p>
+
+        <h3>26 March 2024 — thirty-four addresses of exactly 50 BTC</h3>
+        <p>Thirty-four wallets holding exactly 50 BTC each emptied in one transaction: <strong>1,700 BTC</strong>, plus 1.21 BTC from two smaller addresses. The coins were mined between <strong>7 August and 5 November 2010</strong> and had waited <strong>13.4 to 13.6 years</strong>. Fifty bitcoin was the block reward until 2012, and <strong>32,537 addresses in the list held exactly 50 BTC</strong>; today 723 have less and 629 are empty. Batches of eight or more such wallets moved together on <strong>24 separate days</strong>. That is not 629 independent decisions.</p>
+
+        <h3>11 November 2022 — seven identical 500 BTC wallets</h3>
+        <p>On the day FTX filed for bankruptcy, seven addresses holding exactly 500 BTC were drained to a residue—<strong>3,500 BTC</strong>, plus 75 BTC from two fully emptied addresses. Every coin dated to <strong>10 July 2011</strong>: 11.3 years dormant. Coins that are genuinely lost do not choose the worst day of a bear market to return.</p>
+
+        <h3>7 January – 2 April 2019 — the largest single-address exit</h3>
+        <p><code>1FdjFtrBwf9Jc9fsGN2GtHmG2vs5ZcEuWH</code> held <strong>4,154.25 BTC</strong> and left in five transactions across three dates, ending with 1,201.59 BTC that had sat since <strong>19 April 2012</strong>. Its last outgoing transaction came in February 2020—a 0.001 BTC dust sweep. Reading only the last spend would miss the twelve-week liquidation entirely.</p>
+      </section>
+
+      <section id="large-balances">
+        <h2>The coins that stayed</h2>
+        <p>The larger number belongs to the coins that stayed: <strong>82,086 addresses</strong> with no outgoing spend, holding <strong>2,256,802.64 BTC—89.2%</strong> of the inventory. They had been silent for at least fifteen years.</p>
+        <p>Most are still exactly as they were. <strong>34,824</strong> received only dust and change, gaining 43.54 BTC between them over nine years—nothing that looks like accumulation. <strong>94 addresses still hold at least 1,000 BTC</strong>, for 344,864 BTC—15.1% of every address in the list that still holds a balance.</p>
+
+        <div class="table-wrap" role="region" aria-label="Four large recorded Bitcoin balances" tabindex="0">
+          <table>
+            <caption>The four large remaining balances</caption>
+            <thead>
+              <tr>
+                <th scope="col">Address</th>
+                <th scope="col" class="num">Snapshot balance</th>
+                <th scope="col" class="num">2026 balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row"><code>1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF</code></th><td class="num">79,957.17 BTC</td><td class="num">79,957.27 BTC</td></tr>
+              <tr><th scope="row"><code>12ib7dApVFvg82TXKycWBNpN8kFyiAN1dr</code></th><td class="num">31,000.07 BTC</td><td class="num">31,000.08 BTC</td></tr>
+              <tr><th scope="row"><code>12tkqA9xSoowkzoERHMWNKsTey55YEBqkv</code></th><td class="num">28,151.05 BTC</td><td class="num">28,151.06 BTC</td></tr>
+              <tr><th scope="row"><code>1F34duy2eeMz5mSrvFepVzy7Y1rBsnAyWC</code></th><td class="num">10,770.53 BTC</td><td class="num">10,770.54 BTC</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>The largest is <code>1FeexV6…</code>: 79,957 BTC, untouched since March 2011. It is also <strong>John Doe #1</strong> in the New York case, identified by Galaxy Research as the address holding coins stolen from Mt. Gox. This is not forgotten property. It is stolen, contested property that investigators and creditors have tracked for fifteen years—the most-watched address in Bitcoin.</p>
+      </section>
+
+      <section id="lawsuit">
+        <h2>The lawsuit that says silence means surrender</h2>
+        <p>The case is the most ambitious attempt yet to turn dormancy into a legal conclusion. Its machinery is worth seeing in full.</p>
+
+        <div class="table-wrap" role="region" aria-label="Case details" tabindex="0">
+          <table>
+            <caption>The case at a glance</caption>
+            <thead>
+              <tr><th scope="col">Item</th><th scope="col">Detail</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Court</th><td>New York County Supreme Court, Index No. 153119/2026; Justice Kathy J. King</td></tr>
+              <tr><th scope="row">Plaintiffs</th><td>ABC Company and XYZ Company (Wyoming LLCs) and the pseudonymous “Noah Doe”</td></tr>
+              <tr><th scope="row">Defendants</th><td>John Does 1–39,069—the addresses themselves, not identified persons</td></tr>
+              <tr><th scope="row">Claim</th><td>Quiet title and declaratory judgment under CPLR § 3001, relying on Personal Property Law Art. 7-B</td></tr>
+              <tr><th scope="row">At stake</th><td>39,069 addresses holding 3,799,629 BTC on 25 May 2026</td></tr>
+              <tr><th scope="row">Status</th><td>Pending; no final ruling reported as of 14 November 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>The theory has five steps. An algorithm flagged addresses dormant at least five years and untouched through major run-ups. Noah Doe “found” them in December 2024 and again in March and April 2025. USB drives listing the <em>public addresses</em> went to the NYPD's 17th Precinct. Between 30 June and 10 July 2025 the addresses received tiny OP_RETURN payments carrying an “abandonment notice,” followed by a press release on 7 August and a 90-day claim window that closed on 10 October. An unnamed expert valued each address at under $10 “as-is.”</p>
+        <p>On 1 May 2026 the First Amended Complaint grew the defendant set to 39,069. On 21–22 May, the plaintiffs served the chain itself: <strong>98 batch transactions, 546 satoshis each</strong>, in blocks 950,446–950,576.</p>
+
+        <h3>Why the audit cuts against it</h3>
+        <p><strong>Dormancy is not abandonment.</strong> One address in nine in our list eventually spent something. The 4 July 2025 transfer is the cleanest proof: fourteen years of silence, ended by a professional sale through a regulated desk. Silence describes behavior. It does not establish that an owner is gone.</p>
+        <p><strong>The finder never possessed anything.</strong> Article 7-B was written for objects a finder can pick up, secure and hand to police. Noah Doe handed over a list of public addresses—not coins, not keys, not even a signed message. A ledger the whole world can read is not a lost-and-found box. “John Doe 33,” the first defendant to appear, makes a related point: a Bitcoin address is a string, not a person, and a string cannot be sued.</p>
+        <p><strong>Notice by dust is not notice.</strong> Most Bitcoin wallets do not display OP_RETURN payloads, and many filter incoming dust as spam. A 546-satoshi payment from an unknown address looks exactly like the address-poisoning attacks wallets are built to suppress. The plaintiffs have already dropped 44 defendants whose addresses moved; the set was responsive, just not in the way the notice assumed.</p>
+        <p><strong>A judgment is not a key.</strong> A complete victory would give the plaintiffs a declaration, not a private key. They could not move a single coin. The real leverage is a <em>cloud on title</em>—a document to present to an exchange if coins ever surface at a regulated venue.</p>
+        <p><strong>The set contradicts itself.</strong> It names the Mt. Gox hacker address, the Counterparty burn address (provably unspendable, never owned by anyone), roughly 21,923 Patoshi addresses tied to Satoshi, 44 addresses that moved after the case began, and John Doe 33—a real holder with a 5,000 BTC wallet funded in April 2014. A lost-and-found statute cannot comfortably swallow stolen coins, the most famous coins in the asset's history, and an address with no owner to lose it.</p>
+
+        <h3>The $10 question</h3>
+        <p>The most vulnerable number in the complaint is not 3.8 million. It is <strong>under $10</strong>. That figure is the lever: under § 257(2), property worth less than $10 can vest in a finder one year after the find, skipping the police holding period that applies to valuable property. The pleaded vesting dates line up exactly with the find dates plus one year.</p>
+        <p>The arithmetic does not survive contact with the chain. The <strong>median defendant holds 50 BTC—about $3.86 million</strong>—and the average holds 97.25 BTC, about $7.5 million. <strong>39,046 of 39,069 addresses are worth far more than $10 today.</strong> Even valued at the moment their coins last moved, 7,108 clear $10. A further 28,962 fail only because their coins moved in 2009–10, before bitcoin had a price at all.</p>
+        <div class="callout">
+          <strong>The gap is nine orders of magnitude:</strong> under $10 per address, against a claim reported at $234 billion to $293 billion.
+        </div>
+        <p>The deeper problem is a mismatch of doors. A court can declare who owns a wallet on paper. It cannot produce the key that opens it. The plaintiffs are asking for title to 3.8 million BTC they cannot move—and most of the defendants are not in the room to object. That is not a resolution. It is a claim waiting for someone with a key to test it.</p>
+        <p class="note">The case is pending. The plaintiffs' theory has not been accepted by any court, and the filings summarized here are allegations, not findings. We are not lawyers; this is research, not legal advice.</p>
+      </section>
+
+      <section id="key-search">
+        <h2>The hunt for a lost key</h2>
+        <p>This is where the story usually ends. A court can hand out title, but title cannot move a coin. Only a private key can. So the question the app exists to ask is older and simpler than the lawsuit: can a key still be found?</p>
+
+        <p>If every key were random, the answer would be no, and it would not be close. A private key is drawn from roughly <strong>2<sup>256</sup> possibilities</strong>; for a legacy address it reduces to a 160-bit hash. Under a simplified model where each guess is independent, the chance of matching one specified address is about <strong>1 in 2<sup>160</sup></strong>—roughly 1 in 1.46 × 10<sup>48</sup>. At a billion guesses a second, the expected time to one match is about <strong>4.6 × 10<sup>31</sup> years</strong>. No phone will brute-force that.</p>
+
+        <p>But keys are not always random. Some were produced by software with a flawed random-number generator. Some were built from passwords, phrases, or dice with too few sides. Some were copied, reused, or truncated. When that happens, the key does not sit somewhere in 2<sup>160</sup>; it sits in a small, searchable neighbourhood near zero. A sequential search does not have to beat the whole space. It has to cover the places where the space was never used.</p>
+
+        <p>That is what <strong>Bitcoin Key Hunter</strong> is built for. The app ships with the <strong>82,086 addresses from this audit that have never spent</strong>—each one a lock that has stayed shut for at least fifteen years. From the starting point you set, it walks private keys in sequence, derives both compressed and uncompressed P2PKH addresses, and checks each one against the list.</p>
+
+        <p>It keeps running behind a notification while you use your phone, saves its place every couple of seconds, resumes after the app is closed, and shows how many keys it has checked. When something matches, it stops and shows you the key.</p>
+
+        <p>We will not pretend the odds are good. They are not. Most searches will run for a long time and find nothing, and no app can promise otherwise. But the audit is also the best argument for trying: <strong>9,990 addresses on a list everyone assumed was dead turned out to have a working key behind them</strong>. “Almost impossible” is not the same as “impossible,” and every address on that list is a door that has not opened in fifteen years.</p>
+
+        <div class="callout">
+          <strong>If you find a key, is the wallet yours?</strong> That is exactly what the New York case is still fighting over. A key gives you control. It does not give you a title deed. Bitcoin Key Hunter is a research tool for exploring the chain—not a licence to take coins that belong to someone else.
+        </div>
+
+        <p>Start with the list. Pick a range. Watch the counter climb. The coins have not moved in fifteen years. That is not proof that they cannot.</p>
+
+        <p class="note">Bitcoin Key Hunter is available for Android on <a href="https://play.google.com/store/apps/details?id=com.quickben22.bitcoinlotto">Google Play</a>.</p>
+      </section>
+
+      <section id="sources">
+        <h2>Sources</h2>
+        <ul class="sources">
+          <li>Galaxy Research, “‘Salomon Brothers’ Client Sues to Claim Legal Ownership of Satoshi's Coins,” 27 May 2026. <a href="https://www.galaxy.com/insights/research/satoshi-bitcoin-salomon-brothers-patoshi-abandoned-property-new-york-noah-doe-lawsuit">galaxy.com</a></li>
+          <li>Baker McKenzie, “The ‘Lost Bitcoin’ Litigation,” 10 June 2026. <a href="https://blockchain.bakermckenzie.com/2026/06/10/the-lost-bitcoin-litigation-can-dormant-wallets-such-as-those-belonging-to-satoshi-be-claimed-as-abandoned-property-in-new-york">blockchain.bakermckenzie.com</a></li>
+          <li>Bitcoin.com News, “Bitcoin Policy Institute Fights $293B Wallet Grab as Noah Doe Court Date Nears,” July 2026. <a href="https://news.bitcoin.com/bitcoin-policy-institute-fights-293b-wallet-grab-as-noah-doe-court-date-nears">news.bitcoin.com</a></li>
+          <li>CoinDesk, “Galaxy Confirms Sale of 80,000 Satoshi-Era Bitcoins,” 25 July 2025. <a href="https://www.coindesk.com/markets/2025/07/25/bitcoin-rebounds-after-galaxy-completes-sale-of-usd9b-btc-from-satoshi-era-whale">coindesk.com</a></li>
+          <li>Alex Thorn / Galaxy Research, on the 44 dropped defendants, 8 July 2026. <a href="https://x.com/intangiblecoins/status/2074649310277374380">x.com</a></li>
+          <li>BitcoinWiki, “1FeexV6… Bitcoin address,” accessed 14 November 2026. <a href="https://bitcoinwiki.org/wiki/1feexv6bahb8ybzjqqmjjrccrhgw9sb6uf-discovering-the-private-key">bitcoinwiki.org</a></li>
+        </ul>
+      </section>
+
+      <p class="note"><a href="./address-audit.csv">Download the address audit data (CSV)</a></p>
+    </article>
+  </div>
+
+  <footer>
+    Bitcoin Key Hunter research · Balance checks through 11 November 2026 · Search the list in the app · Not legal advice
+  </footer>
+</body>
+</html>
