@@ -8,6 +8,10 @@
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
         tools:node="remove" />
+    <!-- Guard against any dependency manifest reintroducing the special-use permission. -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        tools:node="remove" />
 
     <application
         android:name=".BitcoinLottoApp"
