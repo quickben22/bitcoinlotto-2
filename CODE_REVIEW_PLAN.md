@@ -2,8 +2,10 @@
 
 ## Scope
 I reviewed all production Kotlin in `:app`, `:core:crypto`, and `:core:data`, plus the Gradle config, the manifest, and the tests.
-The codebase is in good shape: it's modular, and it already includes FLAG_SECURE dialogs, sensitive clipboard copies, an encrypted checkpoint (Tink), a foreground service with `specialUse` type, and decent unit tests.
+The codebase includes FLAG_SECURE dialogs, sensitive clipboard copies, encrypted checkpoints (Tink), and unit tests. Search now uses an application-owned `VisibleSearchController`, not a foreground service.
 The findings below are ranked by impact.
+
+This is a historical review. Its `SearchService`, notification, wake-lock, and service-timeout findings describe the former implementation, which has been removed. The replacement pauses and saves on application backgrounding and resumes only after START SEARCH; service notifications and special-use permissions are no longer part of the app.
 
 ---
 

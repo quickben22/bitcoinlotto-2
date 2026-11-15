@@ -15,7 +15,7 @@ This document records the completed rewrite work, verification results, differen
 | M1 — Project scaffold / build / tooling | Partial | New Gradle project and version catalog are in place. Hilt, Detekt, Ktlint, and CI are not implemented. |
 | M2 — Crypto | Complete | Real secp256k1 via BouncyCastle, Base58Check, WIF, P2PKH, fixtures, and vectors pass. |
 | M3 — Database / Room / Bloom / migration | Partial | Prepacked SQLite lookup and asset tests work. Room, Bloom filter, build-time DB generator, and legacy database migration are not implemented. |
-| M4 — Search engine and foreground service | Mostly complete | Sequential point addition, in-memory address-hash lookup, encrypted results and checkpoint/resume are implemented. Search access uses rewarded-ad gates at 6M and 60M cumulative keys. |
+| M4 — Search engine and visible-app controller | Mostly complete | Sequential point addition, in-memory address-hash lookup, encrypted results and manual checkpoint/resume are implemented. Search access uses rewarded-ad gates at 6M and 60M cumulative keys. |
 | M5 — Compose Stats and Solver | Complete | Both screens, navigation, guessed dialogs, privacy entry point, and original background are implemented. |
 | M6 — Ads / privacy / secure storage | Complete | UMP, test ads, production AdMob IDs, `FLAG_SECURE`, sensitive clipboard, encrypted checkpoints, and backup exclusion are implemented. |
 | M7 — Release candidate | Partial | R8 release build is configured with production ad-unit IDs. Signing, signed AAB, device matrix, and Play Console declarations remain. |
@@ -86,13 +86,22 @@ Dependency injection is manual through `AppContainer`; Hilt is not used.
 - Implemented stop conditions for user stop, limit reached, address found, and invalid key.
 - Track cumulative searched keys; pause at 6 million until a rewarded ad is earned, pause again at 60 million, then unlock permanently after a second rewarded ad.
 - Implemented conflated progress updates at roughly 4 Hz.
-- Implemented checkpoint persistence every two seconds and on user stop.
-- Implemented foreground `LifecycleService` with `specialUse` type.
-- Added progress notification, Stop action, notification-permission handling, and partial wake lock.
-- On timeout, force a checkpoint and stop; if saving stalls, stop promptly and report that the latest progress may be unavailable.
-- Added resume from an encrypted checkpoint after process death.
-- Save found keys encrypted before removing the checkpoint; display them until dismissed and post a separate result notification.
+- Persist checkpoints every two seconds and on user stop or application backgrounding.
+- Use an application-owned `VisibleSearchController` observed by `ProcessLifecycleOwner`; Stats/Solver navigation and configuration changes do not stop the search.
+- Search only while the app is visible. Switching apps or locking the screen cancels computation and saves progress; returning never automatically resumes.
+- Removed the search service, foreground-service permissions, search wake lock, notifications, and notification-permission prompt.
+- Manifest-merger directives remove WorkManager's unused foreground service/permission from the ad dependency. Ordinary SDK scheduling and its transitive wake-lock permission remain.
+- Resume manually from an encrypted checkpoint after backgrounding or process death. Abrupt OS termination can recover only the last completed periodic save.
+- Save found keys encrypted before removing the checkpoint; display them in-app until dismissed.
 - Added unit tests for hit-at-start, increment distance, variants, limits, checkpoints, and misses.
+
+#### Foreground-service removal validation
+
+- The focused controller, search engine, access policy, and Stats ViewModel run passed all 30 tests, including real process-lifecycle recreation/background transitions under Robolectric.
+- Android debug lint completed without errors; debug APK and release AAB builds succeeded.
+- Both the merged release manifest and the AAB base manifest contain no foreground-service permissions, search service, special-use subtype, or WorkManager foreground service.
+- The generated `app/build/outputs/bundle/release/app-release.aab` is unsigned. Publishing still requires an upload-key-signed build and a versionCode above the Console maximum.
+- Manual device verification is incomplete: the API 35 emulator launch failed in the unchanged `MainActivity` edge-to-edge setup with "Window couldn't find content container view"; the emulator subsequently became unavailable. No end-to-end device or Play approval claim is made.
 
 ### 3.5 Encrypted checkpoint storage
 
@@ -154,7 +163,7 @@ Current unit-test suites:
 
 - `BitcoinCryptoTest`, `SearchCheckpointStoreTest`, and `SqliteAddressRepositoryTest`
 - `CheckPrivateKeyUseCaseTest`, `SolverViewModelTest`, and `StatsViewModelTest`
-- `SearchEngineTest`, `SearchServiceTest`, and `SearchBenchmarkTest`
+- `SearchEngineTest`, `VisibleSearchControllerTest`, and `SearchBenchmarkTest`
 
 ---
 
@@ -183,7 +192,7 @@ Notable warnings:
 
 - `targetSdk 36` is not the latest SDK.
 - Newer Gradle and AGP versions are available.
-- Partial wake lock has no timeout.
+- The historical partial wake-lock warning no longer applies: the search wake lock has been removed.
 - Adaptive launcher icons lack a monochrome layer.
 - Unused/duplicate launcher icon resources.
 - Long vector path in the launcher foreground.
@@ -269,7 +278,10 @@ sequential-point/hash-index path. Physical-device throughput and memory usage st
    - Confirm the Play Console owner and upload-key availability.
 
 4. **Complete Play Console declarations**
-   - Foreground-service `specialUse` declaration and justification.
+   - Upload a replacement AAB without foreground-service permissions; inspect its merged manifest first.
+   - Use a versionCode greater than every previously uploaded version (source currently uses 13; check Console before publishing).
+   - Review detected permissions and App content declarations for applicable release tracks. Removing permissions in source does not change already-uploaded artifacts.
+   - No special-use description or video is required for a replacement artifact that does not request that permission. Other artifacts may still require declarations.
    - Data safety form for Advertising ID and ad-related data.
    - Confirm target API compliance.
 
@@ -287,12 +299,12 @@ sequential-point/hash-index path. Physical-device throughput and memory usage st
 3. **Add UI and device tests**
    - Compose tests for Stats and Solver.
    - Guessed-dialog tests.
-   - Instrumented service and process-death tests.
+   - Application visibility, rotation, navigation, and process-death/manual-resume tests.
    - API 24 and API 36 device/emulator runs.
    - Accessibility, font-scale, portrait/landscape, and tablet checks.
 
 4. **Complete release verification**
-   - 30-minute foreground-service run with notification and Stop action.
+   - Visible-app search, background/lock checkpoint saving, and explicit resume on return.
    - Battery and thermal observation.
    - Confirm the guessed dialog using a debug-injected repository: the fixture keys are zero-at-snapshot and are no longer in the shipped still-dormant asset.
    - Confirm no private keys in logcat or crash reports.
@@ -303,7 +315,6 @@ sequential-point/hash-index path. Physical-device throughput and memory usage st
 2. Add the coverage gates from the plan.
 3. Add `.gradle-local/` and `.tools/` to `.gitignore`.
 4. Address lint warnings:
-   - Add a timeout to the wake lock.
    - Add monochrome launcher icons and remove duplicate/unused icon assets.
    - Fix the plural string.
    - Replace `commit()` and non-KTX preference editing.
@@ -347,7 +358,7 @@ sequential-point/hash-index path. Physical-device throughput and memory usage st
 | Checkpoint storage | `core/data/src/main/kotlin/com/quickben22/bitcoinlotto/data/SearchCheckpointStore.kt` |
 | Checkpoint encryption | `core/data/src/main/kotlin/com/quickben22/bitcoinlotto/data/CheckpointCipher.kt` |
 | Search engine | `app/src/main/kotlin/com/quickben22/bitcoinlotto/search/SearchEngine.kt` |
-| Foreground service | `app/src/main/kotlin/com/quickben22/bitcoinlotto/search/SearchService.kt` |
+| Visible-app search controller | `app/src/main/kotlin/com/quickben22/bitcoinlotto/search/VisibleSearchController.kt` |
 | Stats screen | `app/src/main/kotlin/com/quickben22/bitcoinlotto/feature/stats/StatsScreen.kt` |
 | Solver screen | `app/src/main/kotlin/com/quickben22/bitcoinlotto/feature/solver/SolverScreen.kt` |
 | App background | `app/src/main/kotlin/com/quickben22/bitcoinlotto/ui/components/AppBackground.kt` |

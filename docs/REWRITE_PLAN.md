@@ -8,7 +8,7 @@ Last updated: 2026-10-23
 ## 1. Purpose
 
 Rewrite the existing Java/XML Android app as a modern Kotlin/Jetpack Compose application with correct
-Bitcoin cryptography, a reliable foreground search service, and a test suite that proves the
+Bitcoin cryptography, a reliable visible-app search controller, and a test suite that proves the
 "address guessed" flow end to end.
 
 Scope is intentionally reduced: **Stats** and **Solver** screens only. Riddles, a settings screen,
@@ -68,8 +68,8 @@ The current app (`com.quickben22.bitcoinlotto`) is a single-activity Java app us
 | Version | `versionCode 11`, `versionName 1.0.0` |
 | Screens | Stats and Solver only; no riddles, no settings |
 | Privacy entry point | Single top-bar "Privacy options" action (UMP requirement), not a settings screen |
-| Search runtime | Foreground `LifecycleService` with progress notification and Stop action |
-| FGS type | `specialUse` (not `dataSync`), because `dataSync` is limited to 6 hours per 24 hours on Android 15+ |
+| Search runtime | Application-owned `VisibleSearchController` with process-lifecycle visibility gating and checkpoint/resume |
+| Background behavior | Pause and save when hidden; START SEARCH resumes manually; no foreground service or time-limit bypass |
 | Crypto | ACINQ `secp256k1-kmp-jni-android` + BouncyCastle |
 | Address types | Compressed and uncompressed P2PKH only |
 | Data | Regenerated prepacked DB + Bloom filter; Room for app state; DataStore for flags |
@@ -91,7 +91,7 @@ The current app (`com.quickben22.bitcoinlotto`) is a single-activity Java app us
 | Async | Coroutines + Flow; crypto on `Dispatchers.Default`, DB on `Dispatchers.IO` |
 | DI | Hilt + KSP |
 | Persistence | Room, DataStore, Tink + Android Keystore for secrets |
-| Search | `LifecycleService` foreground service, checkpoint/resume |
+| Search | In-process controller, process lifecycle, encrypted checkpoint/manual resume |
 | Crypto | `fr.acinq.secp256k1:secp256k1-kmp-jni-android`, `org.bouncycastle:bcprov-jdk18on` |
 | Address lookup | Build-time Bloom filter asset, batched SQLite verification on hit |
 | Ads | Google Mobile Ads SDK + User Messaging Platform |
@@ -108,7 +108,7 @@ The current app (`com.quickben22.bitcoinlotto`) is a single-activity Java app us
 ### Modules
 
 ```
-:app                 Compose UI, navigation, SearchService, Hilt, ads
+:app                 Compose UI, navigation, VisibleSearchController, Hilt, ads
 :core:crypto         secp256k1, Base58Check, WIF, P2PKH, test fixtures (no Android deps)
 :core:data           Room, DataStore, prepacked DB, Bloom filter, legacy migration
 ```
@@ -131,7 +131,7 @@ com.quickben22.bitcoinlotto
 │   └── migration/
 ├── search/
 │   ├── SearchEngine.kt
-│   └── SearchService.kt
+│   └── VisibleSearchController.kt
 ├── feature/
 │   ├── stats/
 │   └── solver/
@@ -218,7 +218,7 @@ All six addresses were verified absent from the current 92,077-row database.
 ### Stats
 
 - Shows keys checked, duration, and key frequency.
-- START/STOP toggles the foreground search.
+- START/STOP toggles visible-app search. Hiding the app saves and pauses; returning requires START SEARCH to resume.
 - Banner ad at the bottom (debug: test ad unit).
 - On a hit: stop the search and show **"Address guessed!"** with the matched address.
 - Top-bar overflow contains a single "Privacy options" action.
@@ -259,19 +259,15 @@ All six addresses were verified absent from the current 92,077-row database.
 - UMP consent form on first launch plus a reachable privacy options entry point.
 - `android:allowBackup="false"` plus `dataExtractionRules` excluding the database and DataStore,
   so keys cannot leave the device through cloud backup or device-to-device transfer.
-- Service is not exported; only `MainActivity` is exported.
+- No search service is declared; only `MainActivity` is exported.
 
 ### 8.1 Android permissions
 
 | Permission | Type | Why | Required |
 |---|---|---|---|
-| `android.permission.FOREGROUND_SERVICE` | Normal | Run the search as a foreground service | Yes |
-| `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Normal | Permission for the `specialUse` service type (API 34+) | Yes |
-| `android.permission.POST_NOTIFICATIONS` | Dangerous (API 33+) | Show the progress/stop notification | Yes, requested at runtime when the user starts a search |
-| `android.permission.WAKE_LOCK` | Normal | Keep the CPU running while the screen is off during a user-started search | Yes, with a scoped partial wake lock released on stop |
 | `android.permission.INTERNET` | Normal | AdMob ad requests | Yes |
 | `android.permission.ACCESS_NETWORK_STATE` | Normal | AdMob network checks | Yes |
-| `android.permission.VIBRATE` | Normal | Optional notification vibration on a hit | Optional |
+| `android.permission.WAKE_LOCK` | Normal | Transitive ad/measurement and WorkManager scheduling; no search wake lock | Merged by SDK |
 | `com.google.android.gms.permission.AD_ID` | Normal | Advertising ID; declared automatically by Mobile Ads SDK 20.4+ | Merged by SDK; declare data-safety usage |
 | `android.permission.WRITE_EXTERNAL_STORAGE` | Dangerous | Legacy only | **Remove** |
 
@@ -280,26 +276,16 @@ No location, camera, microphone, contacts, storage, `QUERY_ALL_PACKAGES`,
 
 ### 8.2 Manifest and Play Console declarations
 
-- Service declaration:
-
-```xml
-<service
-    android:name=".search.SearchService"
-    android:exported="false"
-    android:foregroundServiceType="specialUse">
-    <property
-        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-        android:value="User-initiated, long-running local cryptographic key-space scan that must continue while the app is in the background." />
-</service>
-```
-
-- Start the service only from a visible Activity (Android 12+ background-start restriction).
-- Implement `Service.onTimeout(int, int)` defensively even with `specialUse`.
-- Play Console: declare the foreground-service use case under **App content**; expect review.
+- Remove the search service and its `PROPERTY_SPECIAL_USE_FGS_SUBTYPE`; do not substitute `dataSync`, `shortService`, or a foreground worker merely to bypass special-use review.
+- Observe `ProcessLifecycleOwner` in the Application. Cancel computation and complete a checkpoint save on ON_STOP; ON_START enables user starts but never resumes automatically.
+- Keep periodic checkpoints for abrupt process termination; a final save cannot be guaranteed after force-stop.
+- Inspect the merged release manifest and replacement AAB for foreground-service permissions and search services, including dependency-added declarations.
+- WorkManager, pulled in by the ad SDK, declares a generic foreground service by default. Remove that unused service and permission with manifest-merger directives; preserve ordinary SDK scheduling and its wake-lock permission. The bundled ad workers do not request foreground or expedited work.
+- Set versionCode above every uploaded version (current source: 13; Console maximum unknown), sign and upload the replacement AAB, then review detected permissions and **App content** for relevant release tracks.
+- A replacement artifact without `FOREGROUND_SERVICE_SPECIAL_USE` does not need a special-use description or demonstration video. Already-uploaded artifacts are unchanged and may still require declarations.
+- This removes this permission requirement; it does not guarantee overall Play approval.
 - Play Console: complete the **Data safety** form for the Advertising ID and ad-related data.
 - Target API 36 is mandatory for updates after 2026-08-31.
-- If `POST_NOTIFICATIONS` is denied, still start the service but show an in-app explanation that
-  progress is visible only in the system Task Manager.
 
 ---
 
@@ -312,7 +298,7 @@ No location, camera, microphone, contacts, storage, `QUERY_ALL_PACKAGES`,
 | Unit (JVM) | JUnit5, Truth, MockK, Turbine, coroutines-test, Kotest property tests | CI |
 | Android integration | Robolectric, Room in-memory | CI |
 | Compose UI | Compose UI Test, AccessibilityChecks, screenshot tests | Local |
-| Instrumented | ServiceTestRule, ActivityScenario, BenchmarkRule | Local |
+| Instrumented | ActivityScenario, BenchmarkRule | Local |
 | Performance | Macrobenchmark (startup), device benchmark (keys/s) | Local, physical device |
 
 ### Crypto tests (`:core:crypto`)
@@ -380,13 +366,15 @@ No location, camera, microphone, contacts, storage, `QUERY_ALL_PACKAGES`,
 - Tink encryption round trip; corrupted ciphertext fails safely.
 - DataStore persistence across restart.
 
-### Search and service tests
+### Search and controller tests
 
 - Increment rollover `0x...FF` to `0x...0100` across all 32 bytes; no skipped or duplicated keys.
 - Stop, limit, found, and invalid-key paths.
 - Duration and speed math with a fake clock.
-- `startForeground` within timeout; notification channel and Stop action; throttled updates.
-- Process-death resume verified locally.
+- Background cancellation and final checkpoint saving; no automatic restart on return.
+- Serialize cancellation/save/start; reject delayed starts after visibility loss.
+- Configuration changes and Stats/Solver navigation retain the running search.
+- Process-death recovery and explicit checkpoint resume verified locally.
 
 ### UI tests
 
@@ -422,7 +410,7 @@ No location, camera, microphone, contacts, storage, `QUERY_ALL_PACKAGES`,
 | M1 | New Gradle project, version catalog, JDK 21 toolchain, Hilt/KSP, Detekt/Ktlint, CI, gitignore `.gradle-local/` and `.tools/` | `assembleDebug` and CI green |
 | M2 | `:core:crypto` with real secp256k1, Base58Check, WIF, fixtures, vectors | All crypto tests pass |
 | M3 | DB generator, Room entities, Bloom filter, legacy migration, asset contract test | 82,086 rows, still-dormant set matches the audit, migration idempotent |
-| M4 | `CheckPrivateKey` use case, `SearchEngine`, `SearchService`, notification-permission flow, remove puzzle branch | Fixture key reported immediately; search survives minimize/process death; FGS starts only from visible UI |
+| M4 | `CheckPrivateKey` use case, `SearchEngine`, `VisibleSearchController`, remove puzzle branch | Fixture key reported immediately; hiding pauses and saves; START SEARCH resumes; navigation/rotation retain search |
 | M5 | Compose Stats and Solver, guessed dialog, theme, privacy action | UI parity, accessibility, portrait/landscape/tablet |
 | M6 | UMP + AdMob, FLAG_SECURE, sensitive clipboard, encrypted session, backup disabled | No test ad IDs in release |
 | M7 | R8, full test run, signed AAB, Play data-safety form | Release candidate |
@@ -455,7 +443,7 @@ Estimated effort: **11–14 dev days**.
 
 Manual release checklist:
 
-- 30-minute foreground-service run with progress and Stop action.
+- Visible-app search with progress and Stop; background/lock checkpoint saving and manual resume.
 - Battery and thermal observation.
 - Confirm the guessed-address dialog with a debug-injected repository; the fixture keys are not in the shipped still-dormant asset.
 - Confirm consent flow and privacy options entry point.
@@ -481,9 +469,8 @@ Manual release checklist:
 |---|---|
 | Upload keystore missing from the repo | Required before publishing an upgrade; obtain from the Play Console owner |
 | Legacy DB has no Room metadata | Regenerate the asset at build time; never load it directly with `createFromAsset` |
-| Foreground-service Play policy | Use `specialUse` with a clear manifest justification, user-initiated start, visible notification; declare it in Play Console |
-| `dataSync` 6-hour timeout (Android 15+) | Avoid `dataSync`; use `specialUse` and implement `onTimeout()` defensively |
-| `POST_NOTIFICATIONS` denied | Keep the service running; explain the Task Manager fallback in the UI |
+| Foreground-service Play policy | Remove the service and permissions; inspect/upload the replacement artifact and review Console declarations for relevant tracks |
+| Abrupt process termination | Recover the last completed periodic checkpoint; never promise an unconditional final save |
 | Battery and thermal limits during long searches | Measure on device, throttle UI updates, expose speed, allow pause/stop |
 | Fixture rows in the production DB | Removed: the asset ships only still-dormant addresses; fixtures are test-only |
 | `minSdk` 21 to 24 bump | Small legacy user loss; required for modern libraries |

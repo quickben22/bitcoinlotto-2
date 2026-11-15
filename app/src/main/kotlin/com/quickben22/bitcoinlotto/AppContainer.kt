@@ -11,10 +11,9 @@ import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyGenerator
 import com.quickben22.bitcoinlotto.domain.usecase.SecureRandomPrivateKeyGenerator
 import com.quickben22.bitcoinlotto.search.AddressChecker
 import com.quickben22.bitcoinlotto.search.RepositoryAddressChecker
-import com.quickben22.bitcoinlotto.search.SearchController
 import com.quickben22.bitcoinlotto.search.SearchEngine
 import com.quickben22.bitcoinlotto.search.SearchStateHolder
-import com.quickben22.bitcoinlotto.search.ServiceSearchController
+import com.quickben22.bitcoinlotto.search.VisibleSearchController
 
 class AppContainer(context: Context) {
     private val appContext = context.applicationContext
@@ -37,7 +36,9 @@ class AppContainer(context: Context) {
 
     val searchEngine: SearchEngine by lazy { SearchEngine(addressChecker) }
 
-    val searchController: SearchController by lazy { ServiceSearchController(appContext) }
+    val searchController: VisibleSearchController by lazy {
+        VisibleSearchController(searchEngine, checkpointStore, searchState)
+    }
 
     val privateKeyGenerator: PrivateKeyGenerator by lazy { SecureRandomPrivateKeyGenerator() }
 }

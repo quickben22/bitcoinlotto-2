@@ -1,10 +1,5 @@
 package com.quickben22.bitcoinlotto.feature.stats
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -108,11 +102,6 @@ fun StatsScreen(
     hit: SearchHit?,
     onDismissHit: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { }
-
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -204,22 +193,16 @@ fun StatsScreen(
 
             Spacer(Modifier.height(24.dp))
 
+            Text(
+                text = stringResource(R.string.search_visible_only),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
             Button(
                 enabled = hit == null && (state.isRunning || !access.isSearchLocked()),
-                onClick = {
-                    if (!state.isRunning &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.POST_NOTIFICATIONS,
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        notificationPermissionLauncher.launch(
-                            Manifest.permission.POST_NOTIFICATIONS,
-                        )
-                    }
-                    onStartStop()
-                },
+                onClick = onStartStop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 56.dp),
@@ -296,9 +279,12 @@ private fun statusText(state: SearchState): String = when (state.status) {
     )
 
     SearchStatus.Found -> stringResource(R.string.stats_status_found)
-    SearchStatus.LimitReached -> state.error ?: stringResource(R.string.stats_status_limit)
-    SearchStatus.Stopped -> state.error ?: stringResource(R.string.stats_status_stopped)
-    SearchStatus.InvalidKey -> state.error ?: stringResource(R.string.stats_status_stopped)
+    SearchStatus.LimitReached -> state.errorMessage?.let { stringResource(it) }
+        ?: state.error ?: stringResource(R.string.stats_status_limit)
+    SearchStatus.Stopped -> state.errorMessage?.let { stringResource(it) }
+        ?: state.error ?: stringResource(R.string.stats_status_stopped)
+    SearchStatus.InvalidKey -> state.errorMessage?.let { stringResource(it) }
+        ?: state.error ?: stringResource(R.string.stats_status_stopped)
     SearchStatus.Error -> state.errorMessage?.let { stringResource(it) }
         ?: state.error ?: stringResource(R.string.stats_status_error)
     SearchStatus.Idle -> stringResource(R.string.stats_status_idle)
