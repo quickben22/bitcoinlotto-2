@@ -39,7 +39,9 @@ fun AdBanner(canRequestAds: Boolean, modifier: Modifier = Modifier) {
     val adView = remember(adUnitId, widthDp) {
         AdView(context).apply {
             this.adUnitId = adUnitId
-            setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp))
+            // Large anchored adaptive replaces the deprecated current-orientation anchored size
+            // and is the supported format for a banner anchored above the navigation bar.
+            setAdSize(AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp))
         }
     }
 
