@@ -34,14 +34,17 @@ fun AdBanner(canRequestAds: Boolean, modifier: Modifier = Modifier) {
     }
 
     val context = LocalContext.current
-    val widthDp = LocalConfiguration.current.screenWidthDp.coerceAtLeast(320)
+    val configuration = LocalConfiguration.current
+    val widthDp = configuration.screenWidthDp.coerceAtLeast(320)
 
-    val adView = remember(adUnitId, widthDp) {
+    val adView = remember(adUnitId, widthDp, configuration.orientation) {
         AdView(context).apply {
             this.adUnitId = adUnitId
-            // Large anchored adaptive replaces the deprecated current-orientation anchored size
-            // and is the supported format for a banner anchored above the navigation bar.
-            setAdSize(AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp))
+            // Standard anchored adaptive keeps the banner compact (32-50 dp) while still
+            // spanning the screen width; the non-deprecated variants are the "large" ones,
+            // which grow to ~90 dp and take too much room above the navigation bar.
+            @Suppress("DEPRECATION")
+            setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp))
         }
     }
 
@@ -55,6 +58,7 @@ fun AdBanner(canRequestAds: Boolean, modifier: Modifier = Modifier) {
 
     AndroidView(
         factory = { adView },
+        // Keep the slot reserved before the ad fills so the layout does not jump.
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 50.dp),

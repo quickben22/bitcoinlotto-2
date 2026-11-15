@@ -193,13 +193,6 @@ fun StatsScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            Text(
-                text = stringResource(R.string.search_visible_only),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-
             Button(
                 enabled = hit == null && (state.isRunning || !access.isSearchLocked()),
                 onClick = onStartStop,
