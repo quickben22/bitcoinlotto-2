@@ -1,21 +1,12 @@
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# proguardFiles setting in build.gradle.kts.
 #
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Room creates generated RoomDatabase implementations via reflection. Room 2.2.5 (pulled in
+# transitively by WorkManager 2.7.0) ships a consumer rule that keeps the generated class but
+# not its constructor, so R8 strips it and the app crashes at startup in WorkManager's
+# initializer. Keep the constructors explicitly until WorkManager is upgraded.
+-keep class * extends androidx.room.RoomDatabase { <init>(...); }
