@@ -3,6 +3,7 @@ package com.quickben22.bitcoinlotto.data
 import android.content.Context
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeyTemplates
+import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.aead.AeadConfig
 import com.google.crypto.tink.integration.android.AndroidKeysetManager
 
@@ -35,7 +36,9 @@ class TinkCheckpointCipher(context: Context) : CheckpointCipher {
             .withMasterKeyUri(MASTER_KEY_URI)
             .build()
             .keysetHandle
-        AeadCheckpointCipher(keysetHandle.getPrimitive(Aead::class.java))
+        AeadCheckpointCipher(
+            keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead::class.java),
+        )
     }
 
     override fun encrypt(plaintext: ByteArray): ByteArray = delegate.encrypt(plaintext)

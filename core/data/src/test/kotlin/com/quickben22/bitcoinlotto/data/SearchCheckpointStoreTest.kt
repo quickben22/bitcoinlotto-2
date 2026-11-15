@@ -11,6 +11,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.crypto.tink.Aead
 import com.google.crypto.tink.KeyTemplates
 import com.google.crypto.tink.KeysetHandle
+import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.aead.AeadConfig
 import java.io.File
 import java.util.UUID
@@ -166,8 +167,13 @@ class SearchCheckpointStoreTest {
 
     private fun createCipher(): CheckpointCipher {
         AeadConfig.register()
-        val keysetHandle = KeysetHandle.generateNew(KeyTemplates.get("AES256_GCM"))
-        return AeadCheckpointCipher(keysetHandle.getPrimitive(Aead::class.java))
+        val keysetHandle = KeysetHandle.generateNew(
+            KeyTemplates.get("AES256_GCM").toParameters(),
+            RegistryConfiguration.get(),
+        )
+        return AeadCheckpointCipher(
+            keysetHandle.getPrimitive(RegistryConfiguration.get(), Aead::class.java),
+        )
     }
 
     private fun checkpoint(limit: Long? = 1_000_000L) = SearchCheckpoint(
