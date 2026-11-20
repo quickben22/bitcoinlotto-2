@@ -3,6 +3,7 @@ package com.quickben22.bitcoinlotto.feature.solver
 import androidx.lifecycle.ViewModel
 import androidx.annotation.StringRes
 import androidx.lifecycle.viewModelScope
+import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.crypto.BitcoinKey
 import com.quickben22.bitcoinlotto.crypto.Hex
 import com.quickben22.bitcoinlotto.domain.usecase.CheckPrivateKeyUseCase
@@ -10,6 +11,7 @@ import com.quickben22.bitcoinlotto.domain.usecase.KeyCheckResult
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyGenerator
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyParseResult
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyParser
+import com.quickben22.bitcoinlotto.search.SearchStateHolder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,15 +39,18 @@ data class GuessedResult(
 data class SolverUiState(
     val input: String = "",
     @StringRes val error: Int? = null,
+    @StringRes val message: Int? = null,
     val derived: DerivedKey? = null,
     val guessed: GuessedResult? = null,
     val showWalletKeys: Boolean = false,
     val showInfo: Boolean = false,
+    val derivedVersion: Int = 0,
 )
 
 class SolverViewModel(
     private val checkPrivateKey: CheckPrivateKeyUseCase,
     private val privateKeyGenerator: PrivateKeyGenerator,
+    private val searchStateHolder: SearchStateHolder,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
@@ -59,6 +64,7 @@ class SolverViewModel(
             it.copy(
                 input = value,
                 error = null,
+                message = null,
                 derived = null,
                 guessed = null,
                 showWalletKeys = false,
@@ -67,11 +73,17 @@ class SolverViewModel(
     }
 
     fun onSetPrivateKey() {
-        check(mutableState.value.input)
+        val input = mutableState.value.input
+        val parsed = PrivateKeyParser.parse(input)
+        if (parsed is PrivateKeyParseResult.Valid) {
+            publishKey(parsed.key.privateKeyHex)
+        }
+        check(input)
     }
 
     fun onRandom() {
         val privateKeyHex = Hex.encode(privateKeyGenerator.generate())
+        publishKey(privateKeyHex)
         mutableState.update {
             it.copy(
                 input = privateKeyHex,
@@ -119,6 +131,7 @@ class SolverViewModel(
                             compressed = result.compressed,
                         ),
                         showWalletKeys = false,
+                        derivedVersion = it.derivedVersion + 1,
                     )
                 }
 
@@ -129,6 +142,7 @@ class SolverViewModel(
                         derived = result.key.toDerivedKey(),
                         guessed = null,
                         showWalletKeys = false,
+                        derivedVersion = it.derivedVersion + 1,
                     )
                 }
 
@@ -147,25 +161,41 @@ class SolverViewModel(
 
     private fun derive(showWalletKeys: Boolean) {
         checkJob?.cancel()
-        when (val parsed = PrivateKeyParser.parse(mutableState.value.input)) {
-            is PrivateKeyParseResult.Valid -> mutableState.update {
-                it.copy(
-                    error = null,
-                    derived = parsed.key.toDerivedKey(),
-                    guessed = null,
-                    showWalletKeys = showWalletKeys,
-                )
-            }
+        val input = mutableState.value.input
+        checkJob = viewModelScope.launch {
+            val parsed = withContext(ioDispatcher) { PrivateKeyParser.parse(input) }
+            val derived = (parsed as? PrivateKeyParseResult.Valid)?.key?.toDerivedKey()
+            mutableState.update { state ->
+                if (state.input != input) return@update state
+                when (parsed) {
+                    is PrivateKeyParseResult.Valid -> state.copy(
+                        error = null,
+                        message = R.string.solver_addresses_generated,
+                        derived = derived,
+                        guessed = null,
+                        showWalletKeys = showWalletKeys,
+                        derivedVersion = state.derivedVersion + 1,
+                    )
 
-            is PrivateKeyParseResult.Invalid -> mutableState.update {
-                it.copy(
-                    error = parsed.reason,
-                    derived = null,
-                    guessed = null,
-                    showWalletKeys = false,
-                )
+                    is PrivateKeyParseResult.Invalid -> state.copy(
+                        error = parsed.reason,
+                        derived = null,
+                        guessed = null,
+                        showWalletKeys = false,
+                    )
+                }
             }
         }
+    }
+
+    private fun publishKey(keyHex: String) {
+        searchStateHolder.update {
+            it.copy(
+                lastKeyHex = keyHex,
+                pendingStartKeyHex = keyHex,
+            )
+        }
+        mutableState.update { it.copy(message = R.string.solver_key_set) }
     }
 
     private fun BitcoinKey.toDerivedKey(): DerivedKey = DerivedKey(

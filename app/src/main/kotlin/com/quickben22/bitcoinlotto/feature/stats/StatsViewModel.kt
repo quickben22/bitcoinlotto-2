@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.quickben22.bitcoinlotto.crypto.Hex
+import com.quickben22.bitcoinlotto.crypto.Secp256k1
 import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.data.SearchCheckpoint
 import com.quickben22.bitcoinlotto.data.SearchCheckpointStore
@@ -90,10 +91,15 @@ class StatsViewModel(
                 if (state.value.hit != null || checkpointStore.hit.first() != null) return@launch
                 if (checkpointStore.searchAccess.first().isSearchLocked()) return@launch
                 val checkpoint = checkpointStore.checkpoint.first()
+                val pendingStartKey = searchStateHolder.state.value.pendingStartKeyHex
+                searchStateHolder.update { it.copy(pendingStartKeyHex = "") }
                 if (checkpoint != null) {
                     searchController.start(checkpoint.nextKeyHex, resume = true)
                 } else {
-                    searchController.start(Hex.encode(privateKeyGenerator.generate()))
+                    val startKey = pendingStartKey
+                        .takeIf { isValidPrivateKey(it) }
+                        ?: Hex.encode(privateKeyGenerator.generate())
+                    searchController.start(startKey)
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -101,6 +107,12 @@ class StatsViewModel(
                 reportStorageError(error)
             }
         }
+    }
+
+    private fun isValidPrivateKey(value: String): Boolean = try {
+        Secp256k1.isValidPrivateKey(Hex.decode(value))
+    } catch (_: IllegalArgumentException) {
+        false
     }
 
     private fun reportStorageError(error: Throwable) {

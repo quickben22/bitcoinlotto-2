@@ -33,6 +33,7 @@ data class SearchState(
     val elapsedMillis: Long = 0L,
     val keysPerSecond: Double = 0.0,
     val lastKeyHex: String = "",
+    val pendingStartKeyHex: String = "",
     val hit: SearchHit? = null,
     val error: String? = null,
     @StringRes val errorMessage: Int? = null,

@@ -79,6 +79,25 @@ class StatsViewModelTest {
     }
 
     @Test
+    fun `start without a checkpoint uses the key set on the solver tab`() = runTest {
+        val store = mockk<SearchCheckpointStore>()
+        every { store.checkpoint } returns flowOf(null)
+        val controller = RecordingController()
+        val viewModel = createViewModel(store, controller, testScheduler)
+        stateHolder.update {
+            it.copy(lastKeyHex = KEY_1, pendingStartKeyHex = KEY_1)
+        }
+
+        viewModel.startOrStop()
+        advanceUntilIdle()
+
+        assertThat(controller.starts).containsExactly(
+            RecordingController.Start(KEY_1, limit = null, resume = false),
+        )
+        assertThat(stateHolder.state.value.pendingStartKeyHex).isEmpty()
+    }
+
+    @Test
     fun `a checkpoint read failure reports an error instead of starting a new search`() = runTest {
         val store = mockk<SearchCheckpointStore>()
         every { store.checkpoint } returns flow { error("checkpoint unavailable") }

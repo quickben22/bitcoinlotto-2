@@ -22,6 +22,7 @@ class AppViewModelFactory(
         modelClass.isAssignableFrom(SolverViewModel::class.java) -> SolverViewModel(
             checkPrivateKey = container.checkPrivateKey,
             privateKeyGenerator = container.privateKeyGenerator,
+            searchStateHolder = container.searchState,
         ) as T
 
         else -> error("Unknown ViewModel class: ${modelClass.name}")

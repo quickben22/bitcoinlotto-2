@@ -8,6 +8,7 @@ import com.quickben22.bitcoinlotto.data.AddressRepository
 import com.quickben22.bitcoinlotto.data.FixtureAddresses
 import com.quickben22.bitcoinlotto.domain.usecase.CheckPrivateKeyUseCase
 import com.quickben22.bitcoinlotto.domain.usecase.PrivateKeyGenerator
+import com.quickben22.bitcoinlotto.search.SearchStateHolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -128,6 +129,7 @@ class SolverViewModelTest {
 
         viewModel.onInputChange(PRIVATE_KEY_ONE)
         viewModel.onWalletKey()
+        advanceUntilIdle()
 
         val revealed = viewModel.state.value
         assertThat(revealed.showWalletKeys).isTrue()
@@ -136,6 +138,7 @@ class SolverViewModelTest {
         assertThat(derived.uncompressedWif).isEqualTo(KEY_1_WIF_UNCOMPRESSED)
 
         viewModel.onGeneratePublicKeys()
+        advanceUntilIdle()
 
         assertThat(viewModel.state.value.showWalletKeys).isFalse()
     }
@@ -193,6 +196,72 @@ class SolverViewModelTest {
     }
 
     @Test
+    fun `setting a private key publishes it as the next search start`() = runTest {
+        val searchState = SearchStateHolder()
+        val viewModel = createViewModel(
+            scheduler = testScheduler,
+            repository = FakeAddressRepository(FixtureAddresses.all),
+            searchStateHolder = searchState,
+        )
+
+        viewModel.onInputChange(KEY_1)
+        viewModel.onSetPrivateKey()
+        advanceUntilIdle()
+
+        assertThat(searchState.state.value.lastKeyHex).isEqualTo(KEY_1)
+        assertThat(searchState.state.value.pendingStartKeyHex).isEqualTo(KEY_1)
+    }
+
+    @Test
+    fun `random also publishes the generated key`() = runTest {
+        val searchState = SearchStateHolder()
+        val viewModel = createViewModel(
+            scheduler = testScheduler,
+            repository = FakeAddressRepository(FixtureAddresses.all),
+            searchStateHolder = searchState,
+        )
+
+        viewModel.onRandom()
+        advanceUntilIdle()
+
+        assertThat(searchState.state.value.lastKeyHex).isEqualTo(KEY_1)
+        assertThat(searchState.state.value.pendingStartKeyHex).isEqualTo(KEY_1)
+    }
+
+    @Test
+    fun `generate works without pressing set first`() = runTest {
+        val viewModel = createViewModel(
+            scheduler = testScheduler,
+            repository = FakeAddressRepository(FixtureAddresses.all),
+        )
+
+        viewModel.onInputChange(KEY_1)
+        viewModel.onGeneratePublicKeys()
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertThat(state.error).isNull()
+        assertThat(state.derived?.compressedAddress).isEqualTo(FixtureAddresses.KEY_1_COMPRESSED)
+        assertThat(state.derivedVersion).isEqualTo(1)
+    }
+
+    @Test
+    fun `repeated generation bumps the version even when values are unchanged`() = runTest {
+        val viewModel = createViewModel(
+            scheduler = testScheduler,
+            repository = FakeAddressRepository(FixtureAddresses.all),
+        )
+
+        viewModel.onInputChange(KEY_1)
+        viewModel.onGeneratePublicKeys()
+        advanceUntilIdle()
+        viewModel.onGeneratePublicKeys()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.derivedVersion).isEqualTo(2)
+    }
+
+    @Test
     fun `info dialog can be shown and dismissed`() = runTest {
         val viewModel = createViewModel(
             scheduler = testScheduler,
@@ -210,12 +279,14 @@ class SolverViewModelTest {
         scheduler: TestCoroutineScheduler,
         repository: AddressRepository,
         generator: PrivateKeyGenerator = PrivateKeyGenerator { Hex.decode(KEY_1) },
+        searchStateHolder: SearchStateHolder = SearchStateHolder(),
     ): SolverViewModel {
         val dispatcher = StandardTestDispatcher(scheduler)
         Dispatchers.setMain(dispatcher)
         return SolverViewModel(
             checkPrivateKey = CheckPrivateKeyUseCase(repository),
             privateKeyGenerator = generator,
+            searchStateHolder = searchStateHolder,
             ioDispatcher = dispatcher,
         )
     }

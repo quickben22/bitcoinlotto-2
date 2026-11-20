@@ -31,9 +31,12 @@ class SearchCheckpointStore(
     private val dataStore: DataStore<Preferences>,
     private val cipher: CheckpointCipher,
 ) {
-    constructor(context: Context) : this(
+    constructor(
+        context: Context,
+        cipher: CheckpointCipher = TinkCheckpointCipher(context.applicationContext),
+    ) : this(
         context.applicationContext.searchCheckpointDataStore,
-        TinkCheckpointCipher(context.applicationContext),
+        cipher,
     )
 
     val checkpoint: Flow<SearchCheckpoint?> = dataStore.data

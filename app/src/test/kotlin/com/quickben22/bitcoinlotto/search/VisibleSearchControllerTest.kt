@@ -14,6 +14,8 @@ import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.data.SearchAccess
 import com.quickben22.bitcoinlotto.data.SearchCheckpoint
 import com.quickben22.bitcoinlotto.data.SearchCheckpointStore
+import com.quickben22.bitcoinlotto.data.SearchedKeyRange
+import com.quickben22.bitcoinlotto.data.SearchedKeyRangeStore
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -51,7 +53,8 @@ class VisibleSearchControllerTest {
     private val owner = object : LifecycleOwner {
         override val lifecycle = LifecycleRegistry(this)
     }
-    private val controller = VisibleSearchController(engine, store, state, scope)
+    private val ranges = FakeSearchedKeyRangeStore()
+    private val controller = VisibleSearchController(engine, store, state, scope, ranges)
 
     init {
         every { store.hit } returns flowOf(null)
@@ -267,6 +270,51 @@ class VisibleSearchControllerTest {
     }
 
     @Test
+    fun `fresh search skips keys inside an already searched range`() {
+        ranges.endByKey[KEY] = NEXT_KEY
+
+        controller.start(KEY)
+        waitFor { state.state.value.keysChecked == 1L }
+
+        verify { engine.search(match { it.last() == 2.toByte() }, any(), 0L, 0L) }
+    }
+
+    @Test
+    fun `resuming a checkpoint ignores searched ranges`() {
+        checkpoints.value = SearchCheckpoint(
+            keysChecked = 1L,
+            nextKeyHex = KEY,
+            elapsedMillis = 10L,
+            startKeyHex = KEY,
+            limit = null,
+        )
+        ranges.endByKey[KEY] = NEXT_KEY
+
+        controller.start(KEY, resume = true)
+        waitFor { state.state.value.isRunning }
+        verify { engine.search(match { it.last() == 1.toByte() }, any(), 1L, 10L) }
+    }
+
+    @Test
+    fun `stopping records the searched range`() {
+        start()
+        controller.stop()
+        waitFor { state.state.value.status == SearchStatus.Stopped }
+
+        assertThat(ranges.recorded).containsExactly(KEY to NEXT_KEY)
+    }
+
+    @Test
+    fun `range store failures do not stop the search`() {
+        ranges.failure = IllegalStateException("storage unavailable")
+
+        start()
+        controller.stop()
+        waitFor { state.state.value.status == SearchStatus.Stopped }
+        assertThat(state.state.value.error).isNull()
+    }
+
+    @Test
     fun `found key remains saved and visible without a notification`() {
         every { engine.search(any(), any(), any(), any()) } returns flowOf(
             SearchEvent.Found(KEY, "address", true, 1, 10),
@@ -305,6 +353,24 @@ class VisibleSearchControllerTest {
             Thread.sleep(5)
         }
         assertThat(condition()).isTrue()
+    }
+
+    private class FakeSearchedKeyRangeStore : SearchedKeyRangeStore {
+        val recorded = mutableListOf<Pair<String, String>>()
+        val endByKey = mutableMapOf<String, String>()
+        var failure: Exception? = null
+
+        override suspend fun record(fromHex: String, toHex: String) {
+            failure?.let { throw it }
+            recorded += fromHex to toHex
+        }
+
+        override suspend fun endOfContainingRange(keyHex: String): String? {
+            failure?.let { throw it }
+            return endByKey[keyHex]
+        }
+
+        override suspend fun ranges(): List<SearchedKeyRange> = emptyList()
     }
 
     private companion object {

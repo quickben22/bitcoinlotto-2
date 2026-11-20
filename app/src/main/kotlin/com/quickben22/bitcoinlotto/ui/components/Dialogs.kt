@@ -2,6 +2,8 @@ package com.quickben22.bitcoinlotto.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,6 +17,11 @@ import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.feature.solver.GuessedResult
 import com.quickben22.bitcoinlotto.search.SearchHit
 
+private val DialogShape = RoundedCornerShape(24.dp)
+
+@Composable
+private fun dialogContainer() = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f)
+
 @Composable
 fun HitDialog(
     hit: SearchHit,
@@ -22,16 +29,21 @@ fun HitDialog(
 ) {
     val context = LocalContext.current
     val privateKeyLabel = stringResource(R.string.hit_private_key)
+    val addressLabel = stringResource(R.string.hit_address)
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = DialogShape,
+        containerColor = dialogContainer(),
+        titleContentColor = MaterialTheme.colorScheme.primary,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text(stringResource(R.string.address_guessed)) },
         text = {
             SecureDialogWindow()
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = stringResource(R.string.hit_address),
+                    text = addressLabel,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = hit.address,
@@ -41,12 +53,13 @@ fun HitDialog(
                 Text(
                     text = privateKeyLabel,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = hit.privateKeyHex,
+                    text = formatPrivateKey(hit.privateKeyHex),
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
                     text = stringResource(
@@ -55,6 +68,7 @@ fun HitDialog(
                         formatDuration(hit.elapsedMillis),
                     ),
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
@@ -72,8 +86,21 @@ fun HitDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.close))
+            Row {
+                TextButton(
+                    onClick = {
+                        copySensitive(
+                            context,
+                            addressLabel,
+                            hit.address,
+                        )
+                    },
+                ) {
+                    Text(stringResource(R.string.hit_copy_address))
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.close))
+                }
             }
         },
     )
@@ -88,6 +115,10 @@ fun GuessedDialog(
     val addressLabel = stringResource(R.string.hit_address)
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = DialogShape,
+        containerColor = dialogContainer(),
+        titleContentColor = MaterialTheme.colorScheme.primary,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text(stringResource(R.string.address_guessed)) },
         text = {
             SecureDialogWindow()
@@ -125,6 +156,10 @@ fun GuessedDialog(
 fun InfoDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = DialogShape,
+        containerColor = dialogContainer(),
+        titleContentColor = MaterialTheme.colorScheme.primary,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text(stringResource(R.string.solver_info_title)) },
         text = { Text(stringResource(R.string.solver_info_body)) },
         confirmButton = {
@@ -142,6 +177,10 @@ fun PrivacyDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = DialogShape,
+        containerColor = dialogContainer(),
+        titleContentColor = MaterialTheme.colorScheme.primary,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text(stringResource(R.string.privacy_options_title)) },
         text = { Text(stringResource(R.string.privacy_options_message)) },
         confirmButton = {

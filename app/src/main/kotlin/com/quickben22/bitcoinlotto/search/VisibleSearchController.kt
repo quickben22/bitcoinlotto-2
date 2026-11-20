@@ -6,9 +6,11 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.quickben22.bitcoinlotto.R
 import com.quickben22.bitcoinlotto.crypto.Hex
+import com.quickben22.bitcoinlotto.data.NoOpSearchedKeyRangeStore
 import com.quickben22.bitcoinlotto.data.SavedSearchHit
 import com.quickben22.bitcoinlotto.data.SearchCheckpoint
 import com.quickben22.bitcoinlotto.data.SearchCheckpointStore
+import com.quickben22.bitcoinlotto.data.SearchedKeyRangeStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -28,6 +30,7 @@ class VisibleSearchController(
     private val store: SearchCheckpointStore,
     private val state: SearchStateHolder,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+    private val searchedRanges: SearchedKeyRangeStore = NoOpSearchedKeyRangeStore,
 ) : SearchController, DefaultLifecycleObserver {
     private var visible = false
     private var visibilityGeneration = 0L
@@ -91,7 +94,12 @@ class VisibleSearchController(
                 }
                 return
             }
-            val keyHex = checkpoint?.nextKeyHex ?: startKeyHex
+            val requestedKeyHex = checkpoint?.nextKeyHex ?: startKeyHex
+            val keyHex = if (checkpoint == null) {
+                skipSearchedRange(requestedKeyHex)
+            } else {
+                requestedKeyHex
+            }
             val key = try {
                 Hex.decode(keyHex)
             } catch (_: IllegalArgumentException) {
@@ -155,6 +163,7 @@ class VisibleSearchController(
                                 event.keysChecked, event.elapsedMillis,
                             )
                             withContext(NonCancellable) {
+                                recordRange(active)
                                 try {
                                     withTimeout(SAVE_DEADLINE_MILLIS) {
                                         store.saveHit(
@@ -258,6 +267,27 @@ class VisibleSearchController(
             searchedKeysDelta = session.keysChecked - session.recordedKeysChecked,
         )
         session.recordedKeysChecked = session.keysChecked
+        recordRange(session)
+    }
+
+    private suspend fun recordRange(session: Session) {
+        if (session.nextKeyHex == session.startKeyHex) return
+        try {
+            searchedRanges.record(session.startKeyHex, session.nextKeyHex)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.e(TAG, "Failed to save searched key range", error)
+        }
+    }
+
+    private suspend fun skipSearchedRange(keyHex: String): String = try {
+        searchedRanges.endOfContainingRange(keyHex) ?: keyHex
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        Log.e(TAG, "Failed to read searched key ranges", error)
+        keyHex
     }
 
     private fun keysPerSecond(keysChecked: Long, elapsedMillis: Long): Double =
