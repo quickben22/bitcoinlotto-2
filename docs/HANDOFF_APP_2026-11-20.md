@@ -112,3 +112,4 @@ All green at commit time. Notable tests:
 - `SolverViewModel.onGeneratePublicKeys()` is now unused in production; safe to remove together with
   its three ViewModel tests if you want a cleaner API.
 - Pre-existing untracked `analysis/` and `docs/` investigation files were deliberately **not** staged.
+- Version bumped to `versionCode 17` / `versionName 1.1.0` after the release AAB was first built.

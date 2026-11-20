@@ -40,8 +40,8 @@ android {
         applicationId = "com.quickben22.bitcoinlotto"
         minSdk = 24
         targetSdk = 36
-        versionCode = 16
-        versionName = "1.0.0"
+        versionCode = 17
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
