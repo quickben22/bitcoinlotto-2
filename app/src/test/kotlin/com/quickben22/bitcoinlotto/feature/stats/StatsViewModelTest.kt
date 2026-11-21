@@ -58,7 +58,7 @@ class StatsViewModelTest {
         advanceUntilIdle()
 
         assertThat(controller.starts).containsExactly(
-            RecordingController.Start("ab", null, resume = true),
+            RecordingController.Start("ab", null, resume = true, skipSearchedRanges = true),
         )
         assertThat(controller.stops).isEqualTo(0)
     }
@@ -74,7 +74,7 @@ class StatsViewModelTest {
         advanceUntilIdle()
 
         assertThat(controller.starts).containsExactly(
-            RecordingController.Start(KEY_1, limit = null, resume = false),
+            RecordingController.Start(KEY_1, limit = null, resume = false, skipSearchedRanges = true),
         )
     }
 
@@ -92,7 +92,57 @@ class StatsViewModelTest {
         advanceUntilIdle()
 
         assertThat(controller.starts).containsExactly(
-            RecordingController.Start(KEY_1, limit = null, resume = false),
+            RecordingController.Start(KEY_1, limit = null, resume = false, skipSearchedRanges = false),
+        )
+        assertThat(stateHolder.state.value.pendingStartKeyHex).isEmpty()
+    }
+
+    @Test
+    fun `a key set on the solver tab overrides a saved checkpoint`() = runTest {
+        val checkpoint = SearchCheckpoint(
+            keysChecked = 5L,
+            nextKeyHex = "ab",
+            elapsedMillis = 1_000L,
+            startKeyHex = "aa",
+            limit = 10L,
+        )
+        val store = mockk<SearchCheckpointStore>()
+        every { store.checkpoint } returns flowOf(checkpoint)
+        val controller = RecordingController()
+        val viewModel = createViewModel(store, controller, testScheduler)
+        stateHolder.update {
+            it.copy(lastKeyHex = KEY_1, pendingStartKeyHex = KEY_1)
+        }
+
+        viewModel.startOrStop()
+        advanceUntilIdle()
+
+        assertThat(controller.starts).containsExactly(
+            RecordingController.Start(KEY_1, limit = null, resume = false, skipSearchedRanges = false),
+        )
+        assertThat(stateHolder.state.value.pendingStartKeyHex).isEmpty()
+    }
+
+    @Test
+    fun `an invalid pending key is discarded and the checkpoint still resumes`() = runTest {
+        val checkpoint = SearchCheckpoint(
+            keysChecked = 5L,
+            nextKeyHex = "ab",
+            elapsedMillis = 1_000L,
+            startKeyHex = "aa",
+            limit = 10L,
+        )
+        val store = mockk<SearchCheckpointStore>()
+        every { store.checkpoint } returns flowOf(checkpoint)
+        val controller = RecordingController()
+        val viewModel = createViewModel(store, controller, testScheduler)
+        stateHolder.update { it.copy(pendingStartKeyHex = "not-a-key") }
+
+        viewModel.startOrStop()
+        advanceUntilIdle()
+
+        assertThat(controller.starts).containsExactly(
+            RecordingController.Start("ab", null, resume = true, skipSearchedRanges = true),
         )
         assertThat(stateHolder.state.value.pendingStartKeyHex).isEmpty()
     }
@@ -147,14 +197,20 @@ class StatsViewModelTest {
             val startKeyHex: String,
             val limit: Long?,
             val resume: Boolean,
+            val skipSearchedRanges: Boolean,
         )
 
         val starts = mutableListOf<Start>()
         var stops = 0
             private set
 
-        override fun start(startKeyHex: String, limit: Long?, resume: Boolean) {
-            starts += Start(startKeyHex, limit, resume)
+        override fun start(
+            startKeyHex: String,
+            limit: Long?,
+            resume: Boolean,
+            skipSearchedRanges: Boolean,
+        ) {
+            starts += Start(startKeyHex, limit, resume, skipSearchedRanges)
         }
 
         override fun stop() {

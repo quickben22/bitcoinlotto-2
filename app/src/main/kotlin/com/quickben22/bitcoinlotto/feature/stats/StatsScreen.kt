@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,12 +43,12 @@ import com.quickben22.bitcoinlotto.search.SearchStatus
 import com.quickben22.bitcoinlotto.search.isSearchLocked
 import com.quickben22.bitcoinlotto.search.keysUntilNextLock
 import com.quickben22.bitcoinlotto.search.SearchHit
+import com.quickben22.bitcoinlotto.ui.components.AppCard
 import com.quickben22.bitcoinlotto.ui.components.findActivity
 import com.quickben22.bitcoinlotto.ui.components.copySensitive
 import com.quickben22.bitcoinlotto.ui.components.HitDialog
 import com.quickben22.bitcoinlotto.ui.components.MonospaceValueCard
 import com.quickben22.bitcoinlotto.ui.components.RewardProgress
-import com.quickben22.bitcoinlotto.ui.components.StatCard
 import com.quickben22.bitcoinlotto.ui.components.StatusChip
 import com.quickben22.bitcoinlotto.ui.components.formatCount
 import com.quickben22.bitcoinlotto.ui.components.formatPrivateKey
@@ -109,6 +108,22 @@ fun StatsScreen(
     onDismissHit: () -> Unit,
 ) {
     val context = LocalContext.current
+    val locked = access.isSearchLocked()
+    val pendingStartKey = state.pendingStartKeyHex
+        .takeIf { it.isNotEmpty() && !state.isRunning }
+    val displayedKey = pendingStartKey ?: state.lastKeyHex
+    val keyLabel = if (pendingStartKey != null) {
+        stringResource(R.string.stats_start_key)
+    } else {
+        stringResource(R.string.stats_private_key)
+    }
+    val hasSpeed = state.keysPerSecond > 0.0
+    val speedText = if (hasSpeed) {
+        formatSpeed(state.keysPerSecond)
+    } else {
+        stringResource(R.string.stats_speed_none)
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -118,110 +133,75 @@ fun StatsScreen(
                 .fillMaxWidth()
                 .widthIn(max = 720.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            StatCard(
-                label = stringResource(R.string.keys),
-                value = formatCount(state.keysChecked),
-                caption = stringResource(R.string.stats_keys_caption),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                StatusChip(
-                    text = statusText(state),
-                    color = statusColor(state),
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = stringResource(
-                        R.string.stats_total_searched,
-                        formatCount(access.totalKeysChecked),
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.End,
-                )
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            RewardProgress(
-                progress = rewardProgress(access),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = access.keysUntilNextLock()?.let {
-                    stringResource(R.string.search_next_unlock, formatCount(it))
-                } ?: stringResource(R.string.search_unlimited),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            val keyLabel = if (state.lastKeyHex.isEmpty()) {
-                stringResource(R.string.stats_private_key)
-            } else if (state.pendingStartKeyHex.isNotEmpty() && !state.isRunning) {
-                stringResource(R.string.stats_start_key)
-            } else {
-                stringResource(R.string.stats_private_key)
-            }
-            MonospaceValueCard(
-                label = keyLabel,
-                value = if (state.lastKeyHex.isEmpty()) {
-                    stringResource(R.string.stats_private_key_none)
-                } else {
-                    formatPrivateKey(state.lastKeyHex)
-                },
-                onCopy = if (state.lastKeyHex.isEmpty()) {
-                    null
-                } else {
-                    {
-                        copySensitive(context, keyLabel, state.lastKeyHex)
+            AppCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.stats_total_searched),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        StatusChip(
+                            text = statusText(state),
+                            color = statusColor(state),
+                        )
                     }
-                },
-            )
-
-            if (hasCheckpoint && !state.isRunning) {
-                Spacer(Modifier.height(12.dp))
-                StatusChip(
-                    text = stringResource(R.string.stats_resume_available),
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                    Text(
+                        text = formatCount(access.totalKeysChecked),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.stats_speed),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = speedText,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (hasSpeed) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        RewardProgress(
+                            progress = rewardProgress(access),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = access.keysUntilNextLock()?.let {
+                                stringResource(R.string.search_next_unlock, formatCount(it))
+                            } ?: stringResource(R.string.search_unlimited),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
-
-            if (access.isSearchLocked()) {
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = stringResource(
-                        if (access.firstRewardUsed) {
-                            R.string.search_lock_second
-                        } else {
-                            R.string.search_lock_first
-                        },
-                        formatCount(access.totalKeysChecked),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = WarningAmber,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
 
             Button(
-                enabled = hit == null && (state.isRunning || !access.isSearchLocked()),
+                enabled = hit == null && (state.isRunning || !locked),
                 onClick = onStartStop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -252,7 +232,7 @@ fun StatsScreen(
                 Text(
                     text = if (state.isRunning) {
                         stringResource(R.string.stop_search)
-                    } else if (access.isSearchLocked()) {
+                    } else if (locked) {
                         stringResource(R.string.search_locked)
                     } else {
                         stringResource(R.string.start_search)
@@ -261,8 +241,21 @@ fun StatsScreen(
                 )
             }
 
-            if (access.isSearchLocked()) {
-                Spacer(Modifier.height(10.dp))
+            if (locked) {
+                Text(
+                    text = stringResource(
+                        if (access.firstRewardUsed) {
+                            R.string.search_lock_second
+                        } else {
+                            R.string.search_lock_first
+                        },
+                        formatCount(access.totalKeysChecked),
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WarningAmber,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Button(
                     enabled = canRequestAds && rewardedAdState in
                         setOf(RewardedAdState.Ready, RewardedAdState.Failed),
@@ -295,7 +288,28 @@ fun StatsScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            MonospaceValueCard(
+                label = keyLabel,
+                value = if (displayedKey.isEmpty()) {
+                    stringResource(R.string.stats_private_key_none)
+                } else {
+                    formatPrivateKey(displayedKey)
+                },
+                onCopy = if (displayedKey.isEmpty()) {
+                    null
+                } else {
+                    {
+                        copySensitive(context, keyLabel, displayedKey)
+                    }
+                },
+            )
+
+            if (hasCheckpoint && !state.isRunning) {
+                StatusChip(
+                    text = stringResource(R.string.stats_resume_available),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 
@@ -317,10 +331,7 @@ private fun rewardProgress(access: SearchAccess): Float {
 
 @Composable
 private fun statusText(state: SearchState): String = when (state.status) {
-    SearchStatus.Running -> stringResource(
-        R.string.stats_status_searching,
-        formatSpeed(state.keysPerSecond),
-    )
+    SearchStatus.Running -> stringResource(R.string.stats_status_searching)
 
     SearchStatus.Found -> stringResource(R.string.stats_status_found)
     SearchStatus.LimitReached -> state.errorMessage?.let { stringResource(it) }

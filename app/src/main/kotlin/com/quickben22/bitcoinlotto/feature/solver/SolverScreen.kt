@@ -30,6 +30,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -98,6 +100,14 @@ fun SolverScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val resultsRequester = remember { BringIntoViewRequester() }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val messageText = state.message?.let { stringResource(it) }
+
+    LaunchedEffect(state.messageVersion) {
+        if (messageText != null) {
+            snackbarHostState.showSnackbar(messageText)
+        }
+    }
 
     LaunchedEffect(state.derivedVersion) {
         if (state.derivedVersion > 0) {
@@ -384,6 +394,13 @@ fun SolverScreen(
 
             Spacer(Modifier.height(24.dp))
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+        )
     }
 
     state.guessed?.let { guessed ->

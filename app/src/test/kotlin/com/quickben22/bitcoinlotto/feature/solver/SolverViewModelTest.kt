@@ -213,6 +213,26 @@ class SolverViewModelTest {
     }
 
     @Test
+    fun `setting a private key shows a visible confirmation`() = runTest {
+        val viewModel = createViewModel(
+            scheduler = testScheduler,
+            repository = FakeAddressRepository(FixtureAddresses.all),
+        )
+
+        viewModel.onInputChange(KEY_1)
+        viewModel.onSetPrivateKey()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.message).isEqualTo(R.string.solver_key_set)
+        assertThat(viewModel.state.value.messageVersion).isEqualTo(1)
+
+        viewModel.onSetPrivateKey()
+        advanceUntilIdle()
+
+        assertThat(viewModel.state.value.messageVersion).isEqualTo(2)
+    }
+
+    @Test
     fun `random also publishes the generated key`() = runTest {
         val searchState = SearchStateHolder()
         val viewModel = createViewModel(

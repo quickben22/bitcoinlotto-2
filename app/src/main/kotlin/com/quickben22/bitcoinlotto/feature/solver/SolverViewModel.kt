@@ -45,6 +45,7 @@ data class SolverUiState(
     val showWalletKeys: Boolean = false,
     val showInfo: Boolean = false,
     val derivedVersion: Int = 0,
+    val messageVersion: Int = 0,
 )
 
 class SolverViewModel(
@@ -175,6 +176,7 @@ class SolverViewModel(
                         guessed = null,
                         showWalletKeys = showWalletKeys,
                         derivedVersion = state.derivedVersion + 1,
+                        messageVersion = state.messageVersion + 1,
                     )
 
                     is PrivateKeyParseResult.Invalid -> state.copy(
@@ -195,7 +197,12 @@ class SolverViewModel(
                 pendingStartKeyHex = keyHex,
             )
         }
-        mutableState.update { it.copy(message = R.string.solver_key_set) }
+        mutableState.update {
+            it.copy(
+                message = R.string.solver_key_set,
+                messageVersion = it.messageVersion + 1,
+            )
+        }
     }
 
     private fun BitcoinKey.toDerivedKey(): DerivedKey = DerivedKey(

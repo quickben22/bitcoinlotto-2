@@ -46,7 +46,12 @@ class VisibleSearchController(
         stop()
     }
 
-    override fun start(startKeyHex: String, limit: Long?, resume: Boolean) {
+    override fun start(
+        startKeyHex: String,
+        limit: Long?,
+        resume: Boolean,
+        skipSearchedRanges: Boolean,
+    ) {
         if (!visible) {
             state.update {
                 it.copy(status = SearchStatus.Stopped, errorMessage = R.string.search_visible_only)
@@ -61,7 +66,7 @@ class VisibleSearchController(
             previous?.join()
             ensureActive()
             if (!visible || generation != visibilityGeneration) return@launch
-            runSearch(startKeyHex, limit, resume)
+            runSearch(startKeyHex, limit, resume, skipSearchedRanges)
         }
         searchJob = job
         job.start()
@@ -71,7 +76,12 @@ class VisibleSearchController(
         searchJob?.cancel()
     }
 
-    private suspend fun runSearch(startKeyHex: String, limit: Long?, resume: Boolean) {
+    private suspend fun runSearch(
+        startKeyHex: String,
+        limit: Long?,
+        resume: Boolean,
+        skipSearchedRanges: Boolean,
+    ) {
         var session: Session? = null
         var checkpointNeeded = false
         state.update { it.copy(status = SearchStatus.Running, error = null, errorMessage = null) }
@@ -95,7 +105,7 @@ class VisibleSearchController(
                 return
             }
             val requestedKeyHex = checkpoint?.nextKeyHex ?: startKeyHex
-            val keyHex = if (checkpoint == null) {
+            val keyHex = if (checkpoint == null && skipSearchedRanges) {
                 skipSearchedRange(requestedKeyHex)
             } else {
                 requestedKeyHex
@@ -114,6 +124,9 @@ class VisibleSearchController(
                 }
                 return
             }
+            // A fresh search replaces any previous resume point, including one that may still be
+            // saved by the job we just joined.
+            if (!resume) store.clear()
             val initialCount = checkpoint?.keysChecked ?: 0L
             val gateLimit = access.keysUntilNextLock()?.let { Math.addExact(initialCount, it) }
             val effectiveLimit = listOfNotNull(limit, gateLimit).minOrNull()

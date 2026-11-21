@@ -4,9 +4,7 @@
     <string name="solver">Solver</string>
     <string name="start_search">START SEARCH</string>
     <string name="stop_search">STOP SEARCH</string>
-    <string name="keys">KEYS</string>
-    <string name="stats_keys_caption">Checked this session</string>
-    <string name="stats_total_searched">Total searched %1$s</string>
+    <string name="stats_total_searched">TOTAL SEARCHED</string>
     <string name="search_next_unlock">Next unlock in %1$s keys</string>
     <string name="search_unlimited">Unlimited searching unlocked</string>
     <string name="address_guessed">Address guessed!</string>
@@ -59,7 +57,9 @@
     <string name="stats_start_key">START KEY</string>
     <string name="stats_private_key_none">Not started</string>
     <string name="stats_status_idle">Ready to search</string>
-    <string name="stats_status_searching">Searching… %1$s keys/s</string>
+    <string name="stats_status_searching">Searching</string>
+    <string name="stats_speed">KEYS / SECOND</string>
+    <string name="stats_speed_none">—</string>
     <string name="stats_status_found">Address guessed!</string>
     <string name="stats_status_limit">Search paused at the current rewarded-ad limit</string>
     <string name="stats_status_stopped">Search stopped</string>

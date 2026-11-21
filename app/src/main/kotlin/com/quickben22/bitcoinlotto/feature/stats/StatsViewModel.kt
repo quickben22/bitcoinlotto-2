@@ -90,16 +90,24 @@ class StatsViewModel(
             try {
                 if (state.value.hit != null || checkpointStore.hit.first() != null) return@launch
                 if (checkpointStore.searchAccess.first().isSearchLocked()) return@launch
-                val checkpoint = checkpointStore.checkpoint.first()
                 val pendingStartKey = searchStateHolder.state.value.pendingStartKeyHex
                 searchStateHolder.update { it.copy(pendingStartKeyHex = "") }
+                val explicitStartKey = pendingStartKey.takeIf { isValidPrivateKey(it) }
+                if (explicitStartKey != null) {
+                    // A key chosen on the Solver tab always wins over a saved checkpoint: the user
+                    // asked for a new start, so do not resume from the previous position.
+                    searchController.start(
+                        startKeyHex = explicitStartKey,
+                        resume = false,
+                        skipSearchedRanges = false,
+                    )
+                    return@launch
+                }
+                val checkpoint = checkpointStore.checkpoint.first()
                 if (checkpoint != null) {
                     searchController.start(checkpoint.nextKeyHex, resume = true)
                 } else {
-                    val startKey = pendingStartKey
-                        .takeIf { isValidPrivateKey(it) }
-                        ?: Hex.encode(privateKeyGenerator.generate())
-                    searchController.start(startKey)
+                    searchController.start(Hex.encode(privateKeyGenerator.generate()))
                 }
             } catch (error: CancellationException) {
                 throw error

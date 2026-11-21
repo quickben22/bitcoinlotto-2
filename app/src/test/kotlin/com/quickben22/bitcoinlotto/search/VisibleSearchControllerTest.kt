@@ -70,6 +70,7 @@ class VisibleSearchControllerTest {
                 totalKeysChecked = access.value.totalKeysChecked + secondArg<Long>(),
             )
         }
+        coEvery { store.clear() } returns Unit
         owner.lifecycle.addObserver(controller)
         owner.lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START)
     }
@@ -277,6 +278,33 @@ class VisibleSearchControllerTest {
         waitFor { state.state.value.keysChecked == 1L }
 
         verify { engine.search(match { it.last() == 2.toByte() }, any(), 0L, 0L) }
+    }
+
+    @Test
+    fun `explicit start ignores searched ranges`() {
+        ranges.endByKey[KEY] = NEXT_KEY
+
+        controller.start(KEY, skipSearchedRanges = false)
+        waitFor { state.state.value.keysChecked == 1L }
+
+        verify { engine.search(match { it.last() == 1.toByte() }, any(), 0L, 0L) }
+    }
+
+    @Test
+    fun `fresh start clears the previous checkpoint`() {
+        checkpoints.value = SearchCheckpoint(
+            keysChecked = 5L,
+            nextKeyHex = NEXT_KEY,
+            elapsedMillis = 10L,
+            startKeyHex = KEY,
+            limit = null,
+        )
+
+        controller.start(KEY)
+        waitFor { state.state.value.keysChecked == 1L }
+
+        coVerify { store.clear() }
+        verify { engine.search(match { it.last() == 1.toByte() }, any(), 0L, 0L) }
     }
 
     @Test
