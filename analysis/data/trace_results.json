@@ -1,0 +1,478 @@
+[
+  {
+    "source": "1ALpEWtXApR19hLXvcG8NfkPyGsUMhFPMS",
+    "path": [
+      {
+        "address": "bc1q8s6khyqw7rarqw0wr9s23mrxjdj2qq40y69gpp",
+        "value": 7499999601,
+        "date": "2026-11-17T02:52:26.000Z",
+        "txid": "a03d20f948f5587ff9f4d2ba80de4fd43b39ae77ae68e106ce49448f7f1fa2e5"
+      }
+    ],
+    "endpoint": "bc1q8s6khyqw7rarqw0wr9s23mrxjdj2qq40y69gpp",
+    "endpointValue": 7499999601,
+    "status": "unspent"
+  },
+  {
+    "source": "1GdN9v11u8ecZF4USpj6GqKhazTxUvy7aY",
+    "path": [
+      {
+        "address": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+        "value": 600000000,
+        "date": "2026-11-14T14:22:54.000Z",
+        "txid": "0cc0c62bfad9629a1746912a32e91165ec4326a9919636e5f6c343e7600c2648"
+      }
+    ],
+    "endpoint": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+    "endpointValue": 600000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1313TARBFzoSbXQUL7yu32p9TjoBhUPx2M",
+    "path": [
+      {
+        "address": "bc1q7upzc44p5v9wt5se40xt4grpwzalfe85zrcsd9",
+        "value": 7500000978,
+        "date": "2026-11-12T22:46:48.000Z",
+        "txid": "b89f8a853a0ee3ac0f78fcafca3bcb91c2270ae9de5d23bfef47ff970f371633"
+      }
+    ],
+    "endpoint": "bc1q7upzc44p5v9wt5se40xt4grpwzalfe85zrcsd9",
+    "endpointValue": 7500000978,
+    "status": "unspent"
+  },
+  {
+    "source": "1GdmnuPz5h9SsUvtiFWqTpJ7h28i8hTUQG",
+    "path": [
+      {
+        "address": "bc1q4ay3j0h8apx5u5t73dhruqekee523cdsepdzk5",
+        "value": 2499997530,
+        "date": "2026-11-14T06:03:55.000Z",
+        "txid": "3b15d1b2d2f9dcae9de42dff86032f44c2c6b5cf4b3be2615b7f5b947d2a009d"
+      }
+    ],
+    "endpoint": "bc1q4ay3j0h8apx5u5t73dhruqekee523cdsepdzk5",
+    "endpointValue": 2499997530,
+    "status": "unspent"
+  },
+  {
+    "source": "1GdN9v11u8ecZF4USpj6GqKhazTxUvy7aY",
+    "path": [
+      {
+        "address": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+        "value": 500000000,
+        "date": "2026-11-14T07:05:24.000Z",
+        "txid": "06f950d5cdae3f699e09dd6b87bcde9fd23040507661f5151819930628c69edd"
+      }
+    ],
+    "endpoint": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+    "endpointValue": 500000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1NoWYaupfeKF93AiXkuPM12JjiaMRw5bZF",
+    "path": [
+      {
+        "address": "bc1q366ast325w0s7rjl4vf57jcwg5vp8nhqnam297",
+        "value": 1825998895,
+        "date": "2026-11-12T02:08:34.000Z",
+        "txid": "7f36b9620f0f4cc62b532dbfcdf01aa6b19721482947d22538c789b8fcf31288"
+      }
+    ],
+    "endpoint": "bc1q366ast325w0s7rjl4vf57jcwg5vp8nhqnam297",
+    "endpointValue": 1825998895,
+    "status": "unspent"
+  },
+  {
+    "source": "1GdN9v11u8ecZF4USpj6GqKhazTxUvy7aY",
+    "path": [
+      {
+        "address": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+        "value": 400000000,
+        "date": "2026-11-18T20:37:49.000Z",
+        "txid": "011d4bcecda21650529d001fb73f081aaf321b70eccb5364d60e116d7e86d131"
+      }
+    ],
+    "endpoint": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+    "endpointValue": 400000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1GdN9v11u8ecZF4USpj6GqKhazTxUvy7aY",
+    "path": [
+      {
+        "address": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+        "value": 700000000,
+        "date": "2026-11-16T13:02:43.000Z",
+        "txid": "f9070e1adb234bb6b95acef0a3355c4a8e3d6333b396970bcbb595805bba39e4"
+      }
+    ],
+    "endpoint": "bc1qr6rxdsk4pyqzuw8sq3kht0ldm3syvx9tv4dycc365g9ffv6vr3lqdtnk32",
+    "endpointValue": 700000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 200000000,
+        "date": "2026-11-14T11:13:34.000Z",
+        "txid": "3b0a8bfc9412aa85c58f60231f54dc06a485a7ff0cccf84d3a507b4cf597a6c7"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 200000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 400000000,
+        "date": "2026-11-14T11:54:18.000Z",
+        "txid": "09343870c7d082437fa4c315fe26363e1168dfdff463d5dc8f1b77ba7954002c"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 400000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za",
+    "path": [
+      {
+        "address": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+        "value": 300000000,
+        "date": "2026-11-14T19:00:58.000Z",
+        "txid": "8a5c204f6f7f26aaf36672f06f34ec72135e552bec77e1f8d3883028a67c5f08"
+      }
+    ],
+    "endpoint": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+    "endpointValue": 300000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za",
+    "path": [
+      {
+        "address": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+        "value": 9900000,
+        "date": "2026-11-14T18:53:48.000Z",
+        "txid": "4971d6c7fe5d2ed846568be5e4552148aaa41bf327e0b9b8139f1dbcc33dcfe2"
+      }
+    ],
+    "endpoint": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+    "endpointValue": 9900000,
+    "status": "unspent"
+  },
+  {
+    "source": "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 90097700,
+        "date": "2026-11-14T19:17:52.000Z",
+        "txid": "68d4411aa9a7375a8a68a2a22b55b944c1060a25f43c3b9e037bacaa72a8b610"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 90097700,
+    "status": "unspent"
+  },
+  {
+    "source": "1BVbQyATQRkN3Y7MX7aspjZsqnrnN2CWbN",
+    "path": [
+      {
+        "address": "3PDJKAUT1BhaWSbaCgKHdGFogfRLuaqNiu",
+        "value": 499999420,
+        "date": "2026-11-15T19:58:06.000Z",
+        "txid": "5a8b0f0c89b6cf0663bf8189c1d1e03c27612b43cc0650eb1d28df91ade25106"
+      }
+    ],
+    "endpoint": "3PDJKAUT1BhaWSbaCgKHdGFogfRLuaqNiu",
+    "endpointValue": 499999420,
+    "status": "unspent"
+  },
+  {
+    "source": "1CCoK3bUtothK5GN9vos1mWthdjoa4BqYa",
+    "path": [
+      {
+        "address": "39bUFFWPRcXpJViX532hgJSVnkjpeVV9cL",
+        "value": 150000000,
+        "date": "2026-11-13T06:45:02.000Z",
+        "txid": "3fb0b4159d511538a7adcc81af03cc0c9e63cca31201a1956551012bcc2384ff"
+      }
+    ],
+    "endpoint": "39bUFFWPRcXpJViX532hgJSVnkjpeVV9cL",
+    "endpointValue": 150000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1CCoK3bUtothK5GN9vos1mWthdjoa4BqYa",
+    "path": [
+      {
+        "address": "39bUFFWPRcXpJViX532hgJSVnkjpeVV9cL",
+        "value": 149998111,
+        "date": "2026-11-13T18:33:06.000Z",
+        "txid": "7dda3898695e0a12d2ac3e752efc60ad9f95a7d31a3fad4916ca9b80ca3bab42"
+      }
+    ],
+    "endpoint": "39bUFFWPRcXpJViX532hgJSVnkjpeVV9cL",
+    "endpointValue": 149998111,
+    "status": "unspent"
+  },
+  {
+    "source": "1CA7ysJMPpUav91cHgQ7Aom7suzY9w7YBw",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 99999000,
+        "date": "2026-11-14T17:09:34.000Z",
+        "txid": "fcaaae1661ce41c3c196329defff7526fed61c64de65547c8ca6c2287ab20767"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 99999000,
+    "status": "unspent"
+  },
+  {
+    "source": "1CCoK3bUtothK5GN9vos1mWthdjoa4BqYa",
+    "path": [
+      {
+        "address": "39bUFFWPRcXpJViX532hgJSVnkjpeVV9cL",
+        "value": 200000000,
+        "date": "2026-11-13T08:23:52.000Z",
+        "txid": "bd6d6a76391fe4f29cb18cf84c2c2db05b000c0d88e4d877b2fe32c0b278d447"
+      }
+    ],
+    "endpoint": "39bUFFWPRcXpJViX532hgJSVnkjpeVV9cL",
+    "endpointValue": 200000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1CA7ysJMPpUav91cHgQ7Aom7suzY9w7YBw",
+    "path": [
+      {
+        "address": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+        "value": 456,
+        "date": "2026-11-14T19:34:22.000Z",
+        "txid": "363559d9b546b95efeb8fd1d81da165fd83940327d60cdcca39a366a72ed7c47"
+      }
+    ],
+    "endpoint": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+    "endpointValue": 456,
+    "status": "unspent"
+  },
+  {
+    "source": "1CAPqy7AhPehwvmUPouVbVGJsNnvWjjiWY",
+    "path": [
+      {
+        "address": "bc1qmdpkdfu9dzfk5vtjyy3grs2m8yf29a7msa4fls",
+        "value": 99998895,
+        "date": "2026-11-14T20:51:55.000Z",
+        "txid": "65417e9316584897b41ea2a1a9baa6de17cb482d2c3965b08b47442d9a39e9ab"
+      }
+    ],
+    "endpoint": "bc1qmdpkdfu9dzfk5vtjyy3grs2m8yf29a7msa4fls",
+    "endpointValue": 99998895,
+    "status": "unspent"
+  },
+  {
+    "source": "1D5ngkYujbuwNw8XDkm5MiLgwRf467o1ne",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 10000000,
+        "date": "2026-11-13T18:33:06.000Z",
+        "txid": "e4782b383a679113a20ec02fc8b2bfb6bc1520ae1afeb39c41c1f23c5a4f9067"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 10000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1D5ngkYujbuwNw8XDkm5MiLgwRf467o1ne",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 60007000,
+        "date": "2026-11-14T11:05:58.000Z",
+        "txid": "d40eceb55fe9cd371d1ac266a2f249a55e068da4cb69fcf5c5190f14206c8601"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 60007000,
+    "status": "unspent"
+  },
+  {
+    "source": "1D5ngkYujbuwNw8XDkm5MiLgwRf467o1ne",
+    "path": [
+      {
+        "address": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+        "value": 29990000,
+        "date": "2026-11-14T04:59:43.000Z",
+        "txid": "4f4c42aefa658232e95925d427120729c4884abc300d5150e8e92dddc92af208"
+      }
+    ],
+    "endpoint": "361mDjTHQpo6i3rf95KXXirnF7PCuYSCfH",
+    "endpointValue": 29990000,
+    "status": "unspent"
+  },
+  {
+    "source": "1Car858fC2J1ZsCv5dmvZbHtKP3Nk2RN8R",
+    "path": [
+      {
+        "address": "bc1qu8xlp3jlk3cn8c9jv8zlyader2en573cwf54ef",
+        "value": 99999756,
+        "date": "2026-11-14T19:41:02.000Z",
+        "txid": "94984582487a205b28103b579aa7aebd77d831b84908688034507d79c41ed4d3"
+      }
+    ],
+    "endpoint": "bc1qu8xlp3jlk3cn8c9jv8zlyader2en573cwf54ef",
+    "endpointValue": 99999756,
+    "status": "unspent"
+  },
+  {
+    "source": "1CsRw431siXGryywxgvreDU1vbbEiXGC7g",
+    "path": [
+      {
+        "address": "bc1qqwgeqgeja3j9cn2ltvvygnxmzphkq2yn0xwrpd",
+        "value": 99999756,
+        "date": "2026-11-14T20:19:53.000Z",
+        "txid": "c6722901ac279f0ce272a691531055f96abfab942e2409f9ab989c80a7c34729"
+      }
+    ],
+    "endpoint": "bc1qqwgeqgeja3j9cn2ltvvygnxmzphkq2yn0xwrpd",
+    "endpointValue": 99999756,
+    "status": "unspent"
+  },
+  {
+    "source": "1D5ngkYujbuwNw8XDkm5MiLgwRf467o1ne",
+    "path": [
+      {
+        "address": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+        "value": 456,
+        "date": "2026-11-14T19:41:02.000Z",
+        "txid": "b56c7d5cc975c40479bc6203470b805d05acb63e3e37f8bd0df84330e3872958"
+      }
+    ],
+    "endpoint": "bc1qk2ms3wjjuk56hva893lqp23lhmjjnzlfjlguzk",
+    "endpointValue": 456,
+    "status": "unspent"
+  },
+  {
+    "source": "1738b4HYtP312grgHBMXujFwZQnhveYWuj",
+    "path": [
+      {
+        "address": "bc1qfr0gspw03yw4pudrr9s7609wyf9t3yjyu4gdh2",
+        "value": 76876246,
+        "date": "2026-11-18T11:01:11.000Z",
+        "txid": "14cdb037398a2a5a3b9cc3fabc05deb0b8d0bbd8cdb3701bd348aac29e506fcd"
+      }
+    ],
+    "endpoint": "bc1qfr0gspw03yw4pudrr9s7609wyf9t3yjyu4gdh2",
+    "endpointValue": 76876246,
+    "status": "unspent"
+  },
+  {
+    "source": "1PAT2UPBB9vDC5VXZTjEHnKa9yu33zo7jC",
+    "path": [
+      {
+        "address": "33SxuZH3KYUw4sVHpP8mw573grZHPfFY45",
+        "value": 10000000,
+        "date": "2026-11-17T21:38:45.000Z",
+        "txid": "35ca33de2a8347a3e823999571941780c276105ff9be6a834fe45bda91202491"
+      }
+    ],
+    "endpoint": "33SxuZH3KYUw4sVHpP8mw573grZHPfFY45",
+    "endpointValue": 10000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1PAT2UPBB9vDC5VXZTjEHnKa9yu33zo7jC",
+    "path": [
+      {
+        "address": "32CeBmRph2XtyeLznbcd8Z6RpCi3KSPvwm",
+        "value": 14900,
+        "date": "2026-11-17T22:34:19.000Z",
+        "txid": "aebff959310397b0112d7b8a9a5f05a5351e036f320ae7804a2e9ca93ecf40ca"
+      }
+    ],
+    "endpoint": "32CeBmRph2XtyeLznbcd8Z6RpCi3KSPvwm",
+    "endpointValue": 14900,
+    "status": "unspent"
+  },
+  {
+    "source": "1PAT2UPBB9vDC5VXZTjEHnKa9yu33zo7jC",
+    "path": [
+      {
+        "address": "33SxuZH3KYUw4sVHpP8mw573grZHPfFY45",
+        "value": 10000000,
+        "date": "2026-11-18T21:15:40.000Z",
+        "txid": "1d89cfcda48c4a75b82bac152ec26c62b22f92df260e147c7f1a6a2b8b6b4ccb"
+      }
+    ],
+    "endpoint": "33SxuZH3KYUw4sVHpP8mw573grZHPfFY45",
+    "endpointValue": 10000000,
+    "status": "unspent"
+  },
+  {
+    "source": "1G47pVbJ7M1JSmZiqzLoVUw2FzyfUuDEuF",
+    "path": [
+      {
+        "address": "3H4o9sFVx3RUvDhYscJaKwvP3KU1WNN35c",
+        "value": 240246333,
+        "date": "2026-11-14T19:53:51.000Z",
+        "txid": "89e249018bcc373356ad69d303c75d4194f7778f3cc2d9baf7273681eaffb464"
+      }
+    ],
+    "endpoint": "3H4o9sFVx3RUvDhYscJaKwvP3KU1WNN35c",
+    "endpointValue": 240246333,
+    "status": "unspent"
+  },
+  {
+    "source": "1BU7pYQvW6CTaLhU39iDh7keaKbTpK4HXC",
+    "path": [
+      {
+        "address": "bc1qj5hhw38ge72k8zfsm5akem3t6w2sel3d0nvzr6",
+        "value": 5898991325,
+        "date": "2026-11-13T04:48:31.000Z",
+        "txid": "4ae994ad836e2c5f985201e1e8322543cb7ca2b80fb37ac1289b024af2015001"
+      }
+    ],
+    "endpoint": "bc1qj5hhw38ge72k8zfsm5akem3t6w2sel3d0nvzr6",
+    "endpointValue": 5898991325,
+    "status": "unspent"
+  },
+  {
+    "source": "1HnNoijUSSNMH7SMGZKKsgwEqjCxxHKeN2",
+    "path": [
+      {
+        "address": "bc1qky8jzu285sk5l4azdexkpwfzlc7p9xnwurzn32",
+        "value": 2820774506,
+        "date": "2026-11-17T03:42:41.000Z",
+        "txid": "41208d7aaa5321c599066a5afbc891402cf421c5841b93586d5f3a0629191f26"
+      }
+    ],
+    "endpoint": "bc1qky8jzu285sk5l4azdexkpwfzlc7p9xnwurzn32",
+    "endpointValue": 2820774506,
+    "status": "unspent"
+  },
+  {
+    "source": "1FFQgpEsQwqyf5psi5tayYFj7Yoz6Ru1tC",
+    "path": [
+      {
+        "address": "bc1qj5hhw38ge72k8zfsm5akem3t6w2sel3d0nvzr6",
+        "value": 5898991325,
+        "date": "2026-11-13T04:48:31.000Z",
+        "txid": "4ae994ad836e2c5f985201e1e8322543cb7ca2b80fb37ac1289b024af2015001"
+      }
+    ],
+    "endpoint": "bc1qj5hhw38ge72k8zfsm5akem3t6w2sel3d0nvzr6",
+    "endpointValue": 5898991325,
+    "status": "unspent"
+  }
+]

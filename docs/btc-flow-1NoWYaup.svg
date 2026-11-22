@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="724" viewBox="0 0 1000 724" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#00e5ff"/>
+  </marker>
+  <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#39ff88"/>
+  </linearGradient>
+</defs>
+<rect width="1000" height="724" fill="#0a0e13"/>
+<rect x="0" y="0" width="1000" height="6" fill="url(#hdr)"/>
+<text x="70" y="56" fill="#e8f6ff" font-size="29" font-weight="700">BTC FLOW · 1NoWYaupfe…Rw5bZF</text>
+<text x="70" y="84" fill="#8aa0b0" font-size="15">Largest-output chain · 12–19 Nov 2026 · 0 moves · ends UNSPENT</text>
+<circle cx="76" cy="116" r="6" fill="#f0a020"/><text x="90" y="121" fill="#8aa0b0" font-size="13">source</text><circle cx="180" cy="116" r="6" fill="#00e5ff"/><text x="194" y="121" fill="#8aa0b0" font-size="13">intermediate hop</text><circle cx="360" cy="116" r="6" fill="#39ff88"/><text x="374" y="121" fill="#8aa0b0" font-size="13">final, unspent output</text>
+<rect x="70" y="140" width="860" height="112" rx="10" fill="#101922" stroke="#274050"/>
+<text x="88" y="166" fill="#7fb2c8" font-size="11" font-weight="700" letter-spacing="1">DORMANCY</text>
+<text x="88" y="190" fill="#e8f6ff" font-size="17" font-weight="700">03 May 2011 17:21 UTC → 12 Nov 2026 02:08 UTC</text>
+<text x="88" y="212" fill="#39ff88" font-size="16" font-weight="700">15.53 years (5671 days)</text>
+<text x="88" y="236" fill="#8aa0b0" font-size="12">last >= 0.001 BTC tx before 12 Nov → first tx in the 12–19 Nov window</text>
+<line x1="630" y1="150" x2="630" y2="242" stroke="#274050"/>
+<text x="648" y="166" fill="#7fb2c8" font-size="11" font-weight="700" letter-spacing="1">PUBLIC ATTRIBUTION (WalletExplorer)</text>
+<text x="648" y="192" fill="#8aa0b0" font-size="12">source:</text>
+<text x="648" y="212" fill="#e8f6ff" font-size="13">unnamed cluster dd1a4642</text>
+<text x="648" y="236" fill="#8aa0b0" font-size="12">final: <tspan fill="#39ff88">unnamed cluster d1b61324</tspan></text>
+<rect x="70" y="302" width="860" height="104" rx="10" fill="#121b24" stroke="#f0a020" stroke-width="1"/>
+<path d="M 188 302 L 188 406" stroke="#f0a020" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="302" width="118" height="104" rx="10" fill="#3a2a10"/>
+<rect x="178" y="302" width="10" height="104" fill="#3a2a10"/>
+<text x="129" y="350" text-anchor="middle" fill="#f0a020" font-size="12" font-weight="700">SOURCE</text>
+<text x="208" y="344" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">1NoWYaupfeKF93AiX</text>
+<text x="208" y="364" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">kuPM12JjiaMRw5bZF</text>
+<rect x="207" y="375" width="70" height="21" rx="10" fill="#3a2a10" stroke="#f0a020"/>
+<text x="217" y="390" fill="#f0a020" font-size="11" font-weight="700">SOURCE</text>
+<text x="288" y="390" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 7f36b9620f…fcf31288</text>
+<text x="912" y="346" text-anchor="end" fill="#f0a020" font-size="22" font-weight="700">18.25998895 BTC</text>
+<text x="912" y="372" text-anchor="end" fill="#8aa0b0" font-size="12">12 Nov 2026 02:08 UTC</text>
+<text x="912" y="392" text-anchor="end" fill="#5f7686" font-size="11">first outgoing payment</text>
+<line x1="500" y1="410" x2="500" y2="468" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="448" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 7f36b9620f…fcf31288</text>
+<rect x="70" y="478" width="860" height="104" rx="10" fill="#121b24" stroke="#39ff88" stroke-width="2"/>
+<path d="M 188 478 L 188 582" stroke="#39ff88" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="478" width="118" height="104" rx="10" fill="#0f2e22"/>
+<rect x="178" y="478" width="10" height="104" fill="#0f2e22"/>
+<text x="129" y="526" text-anchor="middle" fill="#39ff88" font-size="12" font-weight="700">HOP 0</text>
+<text x="129" y="544" text-anchor="middle" fill="#39ff88" font-size="10">FINAL</text>
+<text x="208" y="520" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">bc1q366ast325w0s7rjl4</text>
+<text x="208" y="540" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">vf57jcwg5vp8nhqnam297</text>
+<rect x="207" y="551" width="84" height="21" rx="10" fill="#0f2e22" stroke="#39ff88"/>
+<text x="217" y="566" fill="#39ff88" font-size="11" font-weight="700">UNSPENT</text>
+<text x="302" y="566" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 7f36b9620f…fcf31288</text>
+<text x="912" y="522" text-anchor="end" fill="#39ff88" font-size="22" font-weight="700">18.25998895 BTC</text>
+<text x="912" y="548" text-anchor="end" fill="#8aa0b0" font-size="12">12 Nov 2026 02:08 UTC</text>
+<text x="912" y="568" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<text x="70" y="668" fill="#6b8798" font-size="12">Each arrow is one transaction that spent the previous output; only the largest output was followed.</text>
+<text x="70" y="688" fill="#6b8798" font-size="12">Final output was still UNSPENT on 19 Nov 2026. Source: docs/refresh-biggest-chain.csv · analysis/data/chains.json</text>
+<text x="70" y="708" fill="#6b8798" font-size="12">Attribution = public wallet cluster label, not proof of legal ownership.</text>
+</svg>

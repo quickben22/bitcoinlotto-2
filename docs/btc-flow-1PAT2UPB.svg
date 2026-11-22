@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="2132" viewBox="0 0 1000 2132" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#00e5ff"/>
+  </marker>
+  <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#39ff88"/>
+  </linearGradient>
+</defs>
+<rect width="1000" height="2132" fill="#0a0e13"/>
+<rect x="0" y="0" width="1000" height="6" fill="url(#hdr)"/>
+<text x="70" y="56" fill="#e8f6ff" font-size="29" font-weight="700">BTC FLOW · 1PAT2UPBB9…3zo7jC</text>
+<text x="70" y="84" fill="#8aa0b0" font-size="15">Largest-output chain · 12–19 Nov 2026 · 8 moves · ends UNSPENT</text>
+<circle cx="76" cy="116" r="6" fill="#f0a020"/><text x="90" y="121" fill="#8aa0b0" font-size="13">source</text><circle cx="180" cy="116" r="6" fill="#00e5ff"/><text x="194" y="121" fill="#8aa0b0" font-size="13">intermediate hop</text><circle cx="360" cy="116" r="6" fill="#39ff88"/><text x="374" y="121" fill="#8aa0b0" font-size="13">final, unspent output</text>
+<rect x="70" y="140" width="860" height="112" rx="10" fill="#101922" stroke="#274050"/>
+<text x="88" y="166" fill="#7fb2c8" font-size="11" font-weight="700" letter-spacing="1">DORMANCY</text>
+<text x="88" y="190" fill="#e8f6ff" font-size="17" font-weight="700">05 Jan 2012 07:17 UTC → 17 Nov 2026 21:38 UTC</text>
+<text x="88" y="212" fill="#39ff88" font-size="16" font-weight="700">14.87 years (5431 days)</text>
+<text x="88" y="236" fill="#8aa0b0" font-size="12">last >= 0.001 BTC tx before 12 Nov → first tx in the 12–19 Nov window</text>
+<line x1="630" y1="150" x2="630" y2="242" stroke="#274050"/>
+<text x="648" y="166" fill="#7fb2c8" font-size="11" font-weight="700" letter-spacing="1">PUBLIC ATTRIBUTION (WalletExplorer)</text>
+<text x="648" y="192" fill="#8aa0b0" font-size="12">source:</text>
+<text x="648" y="212" fill="#e8f6ff" font-size="13">unnamed cluster 129bce6c</text>
+<text x="648" y="236" fill="#8aa0b0" font-size="12">final: <tspan fill="#39ff88">unnamed cluster 55d650b4</tspan></text>
+<rect x="70" y="302" width="860" height="104" rx="10" fill="#121b24" stroke="#f0a020" stroke-width="1"/>
+<path d="M 188 302 L 188 406" stroke="#f0a020" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="302" width="118" height="104" rx="10" fill="#3a2a10"/>
+<rect x="178" y="302" width="10" height="104" fill="#3a2a10"/>
+<text x="129" y="350" text-anchor="middle" fill="#f0a020" font-size="12" font-weight="700">SOURCE</text>
+<text x="208" y="344" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">1PAT2UPBB9vDC5VXZ</text>
+<text x="208" y="364" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">TjEHnKa9yu33zo7jC</text>
+<rect x="207" y="375" width="70" height="21" rx="10" fill="#3a2a10" stroke="#f0a020"/>
+<text x="217" y="390" fill="#f0a020" font-size="11" font-weight="700">SOURCE</text>
+<text x="288" y="390" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 35ca33de2a…91202491</text>
+<text x="912" y="346" text-anchor="end" fill="#f0a020" font-size="22" font-weight="700">0.10000000 BTC</text>
+<text x="912" y="372" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 21:38 UTC</text>
+<text x="912" y="392" text-anchor="end" fill="#5f7686" font-size="11">first outgoing payment</text>
+<line x1="500" y1="410" x2="500" y2="468" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="448" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 35ca33de2a…91202491</text>
+<rect x="70" y="478" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 478 L 188 582" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="478" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="478" width="10" height="104" fill="#162632"/>
+<text x="129" y="526" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 0</text>
+<text x="208" y="520" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">33SxuZH3KYUw4sVHp</text>
+<text x="208" y="540" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">P8mw573grZHPfFY45</text>
+<rect x="207" y="551" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="566" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="566" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 35ca33de2a…91202491</text>
+<text x="912" y="522" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">0.10000000 BTC</text>
+<text x="912" y="548" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 21:38 UTC</text>
+<text x="912" y="568" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="586" x2="500" y2="644" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="624" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 074f6a5ad5…4a9886e9</text>
+<rect x="70" y="654" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 654 L 188 758" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="654" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="654" width="10" height="104" fill="#162632"/>
+<text x="129" y="702" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 1</text>
+<text x="208" y="696" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">bc1qmuepnly4lwpw08e4f</text>
+<text x="208" y="716" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">3cn8r2xg57m3kk5xxk5u2</text>
+<rect x="207" y="727" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="742" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="742" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 074f6a5ad5…4a9886e9</text>
+<text x="912" y="698" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">4.94630781 BTC</text>
+<text x="912" y="724" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 21:54 UTC</text>
+<text x="912" y="744" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="762" x2="500" y2="820" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="800" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx f818e17534…b0f2f2da</text>
+<rect x="70" y="830" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 830 L 188 934" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="830" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="830" width="10" height="104" fill="#162632"/>
+<text x="129" y="878" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 2</text>
+<text x="208" y="872" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">bc1qu88mjweplq9efewzn</text>
+<text x="208" y="892" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">g7xcry9p9vdp9ju5j2u33</text>
+<rect x="207" y="903" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="918" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="918" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx f818e17534…b0f2f2da</text>
+<text x="912" y="874" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">2.49880791 BTC</text>
+<text x="912" y="900" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 22:14 UTC</text>
+<text x="912" y="920" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="938" x2="500" y2="996" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="976" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx b8b46f7982…bd5ad573</text>
+<rect x="70" y="1006" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 1006 L 188 1110" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="1006" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="1006" width="10" height="104" fill="#162632"/>
+<text x="129" y="1054" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 3</text>
+<text x="208" y="1048" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">bc1qpralxa3ke2vk8yflyjq5z3eefzr</text>
+<text x="208" y="1068" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">qz35snxaazcvq5n8tpug8u8lq6jjwss</text>
+<rect x="207" y="1079" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="1094" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="1094" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx b8b46f7982…bd5ad573</text>
+<text x="912" y="1050" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">1.79100000 BTC</text>
+<text x="912" y="1076" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 22:15 UTC</text>
+<text x="912" y="1096" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="1114" x2="500" y2="1172" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="1152" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 0bb7e85dd8…5e54a85b</text>
+<rect x="70" y="1182" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 1182 L 188 1286" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="1182" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="1182" width="10" height="104" fill="#162632"/>
+<text x="129" y="1230" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 4</text>
+<text x="208" y="1224" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">352zzNHvsBTaUUNzq</text>
+<text x="208" y="1244" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">B5xbMo8EYdpvHJQB2</text>
+<rect x="207" y="1255" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="1270" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="1270" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 0bb7e85dd8…5e54a85b</text>
+<text x="912" y="1226" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">1.13920724 BTC</text>
+<text x="912" y="1252" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 22:15 UTC</text>
+<text x="912" y="1272" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="1290" x2="500" y2="1348" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="1328" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 8b913fe8e6…607f4fbd</text>
+<rect x="70" y="1358" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 1358 L 188 1462" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="1358" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="1358" width="10" height="104" fill="#162632"/>
+<text x="129" y="1406" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 5</text>
+<text x="208" y="1400" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">bc1qpralxa3ke2vk8yflyjq5z3eefzr</text>
+<text x="208" y="1420" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">qz35snxaazcvq5n8tpug8u8lq6jjwss</text>
+<rect x="207" y="1431" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="1446" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="1446" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 8b913fe8e6…607f4fbd</text>
+<text x="912" y="1402" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">0.81899821 BTC</text>
+<text x="912" y="1428" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 23:24 UTC</text>
+<text x="912" y="1448" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="1466" x2="500" y2="1524" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="1504" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 22cfd65467…e3515d8a</text>
+<rect x="70" y="1534" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 1534 L 188 1638" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="1534" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="1534" width="10" height="104" fill="#162632"/>
+<text x="129" y="1582" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 6</text>
+<text x="208" y="1576" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">352zzNHvsBTaUUNzq</text>
+<text x="208" y="1596" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">B5xbMo8EYdpvHJQB2</text>
+<rect x="207" y="1607" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="1622" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="1622" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 22cfd65467…e3515d8a</text>
+<text x="912" y="1578" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">0.40949580 BTC</text>
+<text x="912" y="1604" text-anchor="end" fill="#8aa0b0" font-size="12">17 Nov 2026 23:24 UTC</text>
+<text x="912" y="1624" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="1642" x2="500" y2="1700" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="1680" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx e4eb1811b4…6cc2375f</text>
+<rect x="70" y="1710" width="860" height="104" rx="10" fill="#121b24" stroke="#00e5ff" stroke-width="1"/>
+<path d="M 188 1710 L 188 1814" stroke="#00e5ff" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="1710" width="118" height="104" rx="10" fill="#162632"/>
+<rect x="178" y="1710" width="10" height="104" fill="#162632"/>
+<text x="129" y="1758" text-anchor="middle" fill="#00e5ff" font-size="12" font-weight="700">HOP 7</text>
+<text x="208" y="1752" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">3JZ3byZy7TTrfy8zd</text>
+<text x="208" y="1772" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">xrm9iqJrdsaZ5CrNw</text>
+<rect x="207" y="1783" width="70" height="21" rx="10" fill="#162632" stroke="#00e5ff"/>
+<text x="217" y="1798" fill="#00e5ff" font-size="11" font-weight="700">MOVED</text>
+<text x="288" y="1798" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx e4eb1811b4…6cc2375f</text>
+<text x="912" y="1754" text-anchor="end" fill="#00e5ff" font-size="22" font-weight="700">147.73750000 BTC</text>
+<text x="912" y="1780" text-anchor="end" fill="#8aa0b0" font-size="12">18 Nov 2026 13:28 UTC</text>
+<text x="912" y="1800" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<line x1="500" y1="1818" x2="500" y2="1876" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="516" y="1856" fill="#6b8798" font-size="11" font-family="Consolas, Menlo, monospace">tx 5754dbb0c0…47ff64a7</text>
+<rect x="70" y="1886" width="860" height="104" rx="10" fill="#121b24" stroke="#39ff88" stroke-width="2"/>
+<path d="M 188 1886 L 188 1990" stroke="#39ff88" stroke-width="1" opacity="0.5"/>
+<rect x="70" y="1886" width="118" height="104" rx="10" fill="#0f2e22"/>
+<rect x="178" y="1886" width="10" height="104" fill="#0f2e22"/>
+<text x="129" y="1934" text-anchor="middle" fill="#39ff88" font-size="12" font-weight="700">HOP 8</text>
+<text x="129" y="1952" text-anchor="middle" fill="#39ff88" font-size="10">FINAL</text>
+<text x="208" y="1928" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">bc1qr4dl5wa7kl8yu792d</text>
+<text x="208" y="1948" fill="#dbe9f4" font-size="15" font-family="Consolas, Menlo, monospace">ceg9z5knl2gkn220lk7a9</text>
+<rect x="207" y="1959" width="84" height="21" rx="10" fill="#0f2e22" stroke="#39ff88"/>
+<text x="217" y="1974" fill="#39ff88" font-size="11" font-weight="700">UNSPENT</text>
+<text x="302" y="1974" fill="#5f7686" font-size="11" font-family="Consolas, Menlo, monospace">tx 5754dbb0c0…47ff64a7</text>
+<text x="912" y="1930" text-anchor="end" fill="#39ff88" font-size="22" font-weight="700">149.44992461 BTC</text>
+<text x="912" y="1956" text-anchor="end" fill="#8aa0b0" font-size="12">18 Nov 2026 17:45 UTC</text>
+<text x="912" y="1976" text-anchor="end" fill="#5f7686" font-size="11">at this address</text>
+<text x="70" y="2076" fill="#6b8798" font-size="12">Each arrow is one transaction that spent the previous output; only the largest output was followed.</text>
+<text x="70" y="2096" fill="#6b8798" font-size="12">Final output was still UNSPENT on 19 Nov 2026. Source: docs/refresh-biggest-chain.csv · analysis/data/chains.json</text>
+<text x="70" y="2116" fill="#6b8798" font-size="12">Attribution = public wallet cluster label, not proof of legal ownership.</text>
+</svg>

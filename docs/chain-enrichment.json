@@ -1,0 +1,173 @@
+{
+  "1313TARBFzoSbXQUL7yu32p9TjoBhUPx2M": {
+    "dormantSince": "2011-02-07T23:52:41.000Z",
+    "dormantSeconds": 497400847,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 0846e5f8",
+    "sourceWalletId": "0846e5f86ff50605",
+    "finalLabel": "unnamed cluster bb801dd3",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1ALpEWtXApR19hLXvcG8NfkPyGsUMhFPMS": {
+    "dormantSince": "2018-02-12T20:11:41.000Z",
+    "dormantSeconds": 276417645,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster ba0494f1",
+    "sourceWalletId": "ba0494f154712213",
+    "finalLabel": "unnamed cluster 031a468c",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1GdmnuPz5h9SsUvtiFWqTpJ7h28i8hTUQG": {
+    "dormantSince": "2012-04-27T17:01:16.000Z",
+    "dormantSeconds": 459090159,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster a5a6e936",
+    "sourceWalletId": "a5a6e936d5ba6480",
+    "finalLabel": "unnamed cluster 623b956d",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1GdN9v11u8ecZF4USpj6GqKhazTxUvy7aY": {
+    "dormantSince": "2012-12-01T19:54:26.000Z",
+    "dormantSeconds": 440248258,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 601b1362",
+    "sourceWalletId": "601b13620bc22a0d",
+    "finalLabel": "unnamed cluster 0002af5f",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1NoWYaupfeKF93AiXkuPM12JjiaMRw5bZF": {
+    "dormantSince": "2011-05-03T17:21:53.000Z",
+    "dormantSeconds": 490006001,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster dd1a4642",
+    "sourceWalletId": "dd1a464208b8c4ad",
+    "finalLabel": "unnamed cluster d1b61324",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za": {
+    "dormantSince": "2012-04-10T06:15:47.000Z",
+    "dormantSeconds": 460616267,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 78faba02",
+    "sourceWalletId": "78faba02cf522c0b",
+    "finalLabel": "unnamed cluster 0c4cc33c",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1BVbQyATQRkN3Y7MX7aspjZsqnrnN2CWbN": {
+    "dormantSince": "2012-11-15T01:24:53.000Z",
+    "dormantSeconds": 441829993,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster b1e7ed66",
+    "sourceWalletId": "b1e7ed664c6894d7",
+    "finalLabel": "unnamed cluster 33259488",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CCoK3bUtothK5GN9vos1mWthdjoa4BqYa": {
+    "dormantSince": "2012-12-01T19:54:26.000Z",
+    "dormantSeconds": 440160636,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 03a7389d",
+    "sourceWalletId": "03a7389d3119b3e9",
+    "finalLabel": "unnamed cluster 0031f592",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CA7ysJMPpUav91cHgQ7Aom7suzY9w7YBw": {
+    "dormantSince": "2012-03-13T03:07:34.000Z",
+    "dormantSeconds": 463068120,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster b66f0ab5",
+    "sourceWalletId": "b66f0ab52dabca9a",
+    "finalLabel": "unnamed cluster 3cab6074",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CAPqy7AhPehwvmUPouVbVGJsNnvWjjiWY": {
+    "dormantSince": "2012-01-19T17:21:37.000Z",
+    "dormantSeconds": 467695818,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster ffb04365",
+    "sourceWalletId": "ffb0436585e049e3",
+    "finalLabel": "unnamed cluster 8b6d4d13",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1Car858fC2J1ZsCv5dmvZbHtKP3Nk2RN8R": {
+    "dormantSince": "2012-01-06T18:22:54.000Z",
+    "dormantSeconds": 468811088,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 213c0729",
+    "sourceWalletId": "213c072930ffff8b",
+    "finalLabel": "unnamed cluster b5ed727d",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CsRw431siXGryywxgvreDU1vbbEiXGC7g": {
+    "dormantSince": "2012-12-17T15:13:10.000Z",
+    "dormantSeconds": 438930403,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 189c4330",
+    "sourceWalletId": "189c43304cb78510",
+    "finalLabel": "unnamed cluster 8c919358",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1D5ngkYujbuwNw8XDkm5MiLgwRf467o1ne": {
+    "dormantSince": "2012-04-09T18:13:56.000Z",
+    "dormantSeconds": 460599550,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster e6a04724",
+    "sourceWalletId": "e6a04724687d816a",
+    "finalLabel": "unnamed cluster 3cab6074",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1738b4HYtP312grgHBMXujFwZQnhveYWuj": {
+    "dormantSince": "2012-12-17T19:27:39.000Z",
+    "dormantSeconds": 439227212,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster bac1e0e7",
+    "sourceWalletId": "bac1e0e7de0cf522",
+    "finalLabel": "unnamed cluster 3b053764",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1PAT2UPBB9vDC5VXZTjEHnKa9yu33zo7jC": {
+    "dormantSince": "2012-01-05T07:17:42.000Z",
+    "dormantSeconds": 469203663,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 129bce6c",
+    "sourceWalletId": "129bce6cef79cec7",
+    "finalLabel": "unnamed cluster 55d650b4",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1G47pVbJ7M1JSmZiqzLoVUw2FzyfUuDEuF": {
+    "dormantSince": "2012-10-30T10:35:09.000Z",
+    "dormantSeconds": 443092722,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 018883af",
+    "sourceWalletId": "018883af8f6cc4d2",
+    "finalLabel": "unnamed cluster 0c4cc33c",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1HnNoijUSSNMH7SMGZKKsgwEqjCxxHKeN2": {
+    "dormantSince": "2011-04-15T02:49:58.000Z",
+    "dormantSeconds": 492051163,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 122a2b7d",
+    "sourceWalletId": "122a2b7d0206db3d",
+    "finalLabel": "unnamed cluster 231117fc",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1BU7pYQvW6CTaLhU39iDh7keaKbTpK4HXC": {
+    "dormantSince": "2010-09-19T12:38:24.000Z",
+    "dormantSeconds": 509642985,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 36c7ee5f",
+    "sourceWalletId": "36c7ee5fc7bf5a50",
+    "finalLabel": "not in WalletExplorer",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1FFQgpEsQwqyf5psi5tayYFj7Yoz6Ru1tC": {
+    "dormantSince": "2010-09-08T12:46:08.000Z",
+    "dormantSeconds": 510593063,
+    "dormantApprox": false,
+    "sourceLabel": "unnamed cluster 36c7ee5f",
+    "sourceWalletId": "36c7ee5fc7bf5a50",
+    "finalLabel": "not in WalletExplorer",
+    "dormantDefinition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  }
+}

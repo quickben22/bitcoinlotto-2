@@ -1,0 +1,21 @@
+const path = require('path');
+const fs = require('fs');
+const d = process.cwd();
+function load(name) { return JSON.parse(fs.readFileSync(path.join(d, name), 'utf8')); }
+const z = load('zombies.json');
+const h = load('histories.json');
+const c = load('current_balances.json');
+const t = load('txdetails.json');
+const src = '1FFQgpEsQwqyf5psi5tayYFj7Yoz6Ru1tC';
+console.log('zombies type', Array.isArray(z) ? 'array' : typeof z, 'len', Array.isArray(z) ? z.length : Object.keys(z).length);
+console.log('zombie sample', JSON.stringify(Array.isArray(z) ? z[0] : Object.entries(z)[0]).slice(0, 800));
+console.log('zombie for source', JSON.stringify(Array.isArray(z) ? z.find(x => (x.address || x.a) === src) : z[src]).slice(0, 800));
+console.log('histories type', Array.isArray(h) ? 'array' : typeof h, 'keys', Object.keys(h).length, 'first key', Object.keys(h)[0]);
+const firstH = Array.isArray(h) ? h[0] : h[Object.keys(h)[0]];
+console.log('history first entry', JSON.stringify(firstH).slice(0, 1200));
+const srcH = Array.isArray(h) ? h.find(x => (x.address || x.a || x.addr) === src) : h[src];
+console.log('history for source', srcH === undefined ? 'NOT FOUND' : JSON.stringify(srcH).slice(0, 1200));
+console.log('current_balances type', Array.isArray(c) ? 'array' : typeof c, 'len', Array.isArray(c) ? c.length : Object.keys(c).length);
+console.log('balance for source', JSON.stringify(c[src] || (Array.isArray(c) ? c.find(x => (x.address || x.a) === src) : null)).slice(0, 300));
+console.log('txdetails type', Array.isArray(t) ? 'array' : typeof t, 'len', Array.isArray(t) ? t.length : Object.keys(t).length);
+console.log('txdetails sample', JSON.stringify(Array.isArray(t) ? t[0] : Object.entries(t)[0]).slice(0, 1500));

@@ -1,0 +1,154 @@
+{
+  "1313TARBFzoSbXQUL7yu32p9TjoBhUPx2M": {
+    "dormantSince": "2011-02-07T23:52:41.000Z",
+    "wokeUp": "2026-11-12T22:46:48.000Z",
+    "dormantSeconds": 497400847,
+    "lastTxBeforeWindow": "606c1004a9670692b11ed7e1044f9ad0e5604eaa3f76bf313c3e74c4b792a154",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1ALpEWtXApR19hLXvcG8NfkPyGsUMhFPMS": {
+    "dormantSince": "2018-02-12T20:11:41.000Z",
+    "wokeUp": "2026-11-17T02:52:26.000Z",
+    "dormantSeconds": 276417645,
+    "lastTxBeforeWindow": "b157c7bc13940282c08798d0d7faf59ff02cd8098cfc2300080bdbc161e9a694",
+    "lastAmountBtc": 0.001,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1GdmnuPz5h9SsUvtiFWqTpJ7h28i8hTUQG": {
+    "dormantSince": "2012-04-27T17:01:16.000Z",
+    "wokeUp": "2026-11-14T06:03:55.000Z",
+    "dormantSeconds": 459090159,
+    "lastTxBeforeWindow": "1f22dbb862024121f7c5209381190ae25122390f036e4e10b960080b5fad1b75",
+    "lastAmountBtc": 25,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1GdN9v11u8ecZF4USpj6GqKhazTxUvy7aY": {
+    "dormantSince": "2012-12-01T19:54:26.000Z",
+    "wokeUp": "2026-11-14T07:05:24.000Z",
+    "dormantSeconds": 440248258,
+    "lastTxBeforeWindow": "bc10913df61ea3504c6a976b9d10fa9245a2df9906038674e12d3c36813a010e",
+    "lastAmountBtc": 25,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1NoWYaupfeKF93AiXkuPM12JjiaMRw5bZF": {
+    "dormantSince": "2011-05-03T17:21:53.000Z",
+    "wokeUp": "2026-11-12T02:08:34.000Z",
+    "dormantSeconds": 490006001,
+    "lastTxBeforeWindow": "a483957c44827c5a6b5b11d5eedad25cb22fb768bb4a1827d7a66bf3f8c9dde4",
+    "lastAmountBtc": 18.26,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1AgiG4fzC2Z6fQ1Ltf6tEz9sUBCY1ay2za": {
+    "dormantSince": "2012-04-10T06:15:47.000Z",
+    "wokeUp": "2026-11-14T11:13:34.000Z",
+    "dormantSeconds": 460616267,
+    "lastTxBeforeWindow": "e4c2a92d900739a2efd0877221ecd57bca482e2341a842c1444f770a902d1d01",
+    "lastAmountBtc": 10,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1BVbQyATQRkN3Y7MX7aspjZsqnrnN2CWbN": {
+    "dormantSince": "2012-11-15T01:24:53.000Z",
+    "wokeUp": "2026-11-15T19:58:06.000Z",
+    "dormantSeconds": 441829993,
+    "lastTxBeforeWindow": "e78655470148d8d03c029afb4fc0343bd39d24ca147f1cf496e33778e2e56dc4",
+    "lastAmountBtc": 5,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CCoK3bUtothK5GN9vos1mWthdjoa4BqYa": {
+    "dormantSince": "2012-12-01T19:54:26.000Z",
+    "wokeUp": "2026-11-13T06:45:02.000Z",
+    "dormantSeconds": 440160636,
+    "lastTxBeforeWindow": "bc10913df61ea3504c6a976b9d10fa9245a2df9906038674e12d3c36813a010e",
+    "lastAmountBtc": 5,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CA7ysJMPpUav91cHgQ7Aom7suzY9w7YBw": {
+    "dormantSince": "2012-03-13T03:07:34.000Z",
+    "wokeUp": "2026-11-14T17:09:34.000Z",
+    "dormantSeconds": 463068120,
+    "lastTxBeforeWindow": "957ca98b555ce13216980a4f3f0b3b7cd43424233d5c06b89bd5a327cea959c4",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CAPqy7AhPehwvmUPouVbVGJsNnvWjjiWY": {
+    "dormantSince": "2012-01-19T17:21:37.000Z",
+    "wokeUp": "2026-11-14T20:51:55.000Z",
+    "dormantSeconds": 467695818,
+    "lastTxBeforeWindow": "2f156c02b776e1bb27000cf48fb20e2cb105448d507bc602b9f475e4bd241ca9",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1Car858fC2J1ZsCv5dmvZbHtKP3Nk2RN8R": {
+    "dormantSince": "2012-01-06T18:22:54.000Z",
+    "wokeUp": "2026-11-14T19:41:02.000Z",
+    "dormantSeconds": 468811088,
+    "lastTxBeforeWindow": "9b917158ffe28f606dd15262370f5ad7ba91916e2bf753a575883c0bf1f142ea",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1CsRw431siXGryywxgvreDU1vbbEiXGC7g": {
+    "dormantSince": "2012-12-17T15:13:10.000Z",
+    "wokeUp": "2026-11-14T20:19:53.000Z",
+    "dormantSeconds": 438930403,
+    "lastTxBeforeWindow": "3ed986e3912d0715c8050e7a0c06845e2aaa338ab26a57e2cea9203649d26f24",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1D5ngkYujbuwNw8XDkm5MiLgwRf467o1ne": {
+    "dormantSince": "2012-04-09T18:13:56.000Z",
+    "wokeUp": "2026-11-13T18:33:06.000Z",
+    "dormantSeconds": 460599550,
+    "lastTxBeforeWindow": "8cb41d6ae442688de36a14cf09e6e1009db0e07c07554c2634604bb1b894d516",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1738b4HYtP312grgHBMXujFwZQnhveYWuj": {
+    "dormantSince": "2012-12-17T19:27:39.000Z",
+    "wokeUp": "2026-11-18T11:01:11.000Z",
+    "dormantSeconds": 439227212,
+    "lastTxBeforeWindow": "b7a63e912a5fd688aa25d4c5572f2b11ccfa93d5e8a1fa06d1aa91826f7cf237",
+    "lastAmountBtc": 1.6801698,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1PAT2UPBB9vDC5VXZTjEHnKa9yu33zo7jC": {
+    "dormantSince": "2012-01-05T07:17:42.000Z",
+    "wokeUp": "2026-11-17T21:38:45.000Z",
+    "dormantSeconds": 469203663,
+    "lastTxBeforeWindow": "bad7bb1bf000562634563cbb2a84a1a45350ce47610d9bc0bfd9f973d057bffa",
+    "lastAmountBtc": 1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1G47pVbJ7M1JSmZiqzLoVUw2FzyfUuDEuF": {
+    "dormantSince": "2012-10-30T10:35:09.000Z",
+    "wokeUp": "2026-11-14T19:53:51.000Z",
+    "dormantSeconds": 443092722,
+    "lastTxBeforeWindow": "1a5999e13bf9e4f83cad6443431ddac5e2fc6f9564c18b4b9a1456bc2b3d8306",
+    "lastAmountBtc": 0.1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1HnNoijUSSNMH7SMGZKKsgwEqjCxxHKeN2": {
+    "dormantSince": "2011-04-15T02:49:58.000Z",
+    "wokeUp": "2026-11-17T03:42:41.000Z",
+    "dormantSeconds": 492051163,
+    "lastTxBeforeWindow": "f603a7d6d001e4e8d3a86ab0a138685824fd6ee17300f1e470aef4faae84b28d",
+    "lastAmountBtc": 0.1,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1BU7pYQvW6CTaLhU39iDh7keaKbTpK4HXC": {
+    "dormantSince": "2010-09-19T12:38:24.000Z",
+    "wokeUp": "2026-11-13T04:08:09.000Z",
+    "dormantSeconds": 509642985,
+    "lastTxBeforeWindow": "1200f922543e948d6ad5e3c67eea912ee50b1704d6d800b356bafa9b7b1c11f8",
+    "lastAmountBtc": 50,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  },
+  "1FFQgpEsQwqyf5psi5tayYFj7Yoz6Ru1tC": {
+    "dormantSince": "2010-09-08T12:46:08.000Z",
+    "wokeUp": "2026-11-13T04:10:31.000Z",
+    "dormantSeconds": 510593063,
+    "lastTxBeforeWindow": "04716b87dff9e3a961f5ed45fa41484a3a9f5b564c47ffde589aefae5ac077cc",
+    "lastAmountBtc": 50,
+    "definition": "last >= 0.001 BTC tx before 12 Nov 2026 -> first tx in the 12-19 Nov window"
+  }
+}
