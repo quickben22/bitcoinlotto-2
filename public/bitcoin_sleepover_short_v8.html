@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A short version: an audit of 92,076 long-dormant Bitcoin addresses, the wallets that woke up, and how peel chains can muddy who owns old coins.">
+  <title>The Great Bitcoin Sleepover — Short Version</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #ece7dd;
+      --ink-dim: #c9c3b7;
+      --muted: #a7a0a0;
+      --paper: #0b0a0e;
+      --panel: #14121b;
+      --panel-2: #191622;
+      --line: rgba(255, 255, 255, .1);
+      --line-strong: rgba(255, 255, 255, .2);
+      --amber: #f7931a;
+      --amber-soft: #ffb454;
+      --gold: #e7c07b;
+      --dust: #9da6ff;
+      --gold-pale: rgba(247, 147, 26, .08);
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1000px 580px at 78% -10%, rgba(247, 147, 26, .13), transparent 62%),
+        radial-gradient(850px 460px at 5% 2%, rgba(124, 134, 232, .08), transparent 60%),
+        var(--paper);
+      color: var(--ink);
+      font: 18px/1.72 var(--serif);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: rgba(247, 147, 26, .3); color: #fff; }
+    a { color: var(--amber-soft); text-decoration: none; border-bottom: 1px solid rgba(255, 180, 84, .32); }
+    a:hover { color: #ffd098; border-bottom-color: var(--amber-soft); }
+    a:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    .table-wrap:focus-visible, .svg-scroll:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      z-index: 3;
+      padding: .65rem 1rem;
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    .skip-link:focus { left: 1rem; top: 1rem; }
+
+    .masthead {
+      padding: 1rem max(1.25rem, calc((100% - 1120px) / 2));
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 10, 14, .82);
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: .76rem;
+      font-weight: 750;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      padding: clamp(3rem, 8vw, 7rem) max(1.25rem, calc((100% - 1120px) / 2)) 3rem;
+      background:
+        radial-gradient(ellipse at 87% 14%, rgba(247, 147, 26, .12), transparent 30rem),
+        linear-gradient(145deg, rgba(20, 18, 27, .88), rgba(11, 10, 14, .24));
+    }
+
+    .eyebrow {
+      margin: 0 0 .8rem;
+      color: var(--amber);
+      font-family: var(--sans);
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1, h2, h3 {
+      font-family: var(--serif);
+      line-height: 1.14;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin-bottom: 1.1rem;
+      font-size: clamp(2.8rem, 7vw, 5.8rem);
+      font-weight: 500;
+      letter-spacing: -.045em;
+    }
+
+    .deck {
+      max-width: 760px;
+      margin-bottom: 1.25rem;
+      color: var(--ink-dim);
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      line-height: 1.48;
+    }
+
+    .byline {
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: .9rem;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .8rem;
+      max-width: 1120px;
+      margin: 2.4rem auto 0;
+      padding: 0;
+    }
+
+    .metrics > div {
+      min-height: 118px;
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(25, 22, 34, .94), rgba(17, 15, 23, .94));
+      box-shadow: 0 20px 50px -35px rgba(0, 0, 0, .9);
+    }
+
+    .metrics dt {
+      color: var(--amber-soft);
+      font-family: var(--sans);
+      font-size: clamp(1.45rem, 2.5vw, 2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metrics dd {
+      margin: .45rem 0 0;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: .84rem;
+      line-height: 1.4;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 220px) minmax(0, 760px);
+      gap: clamp(2rem, 6vw, 5rem);
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 5rem;
+    }
+
+    .contents {
+      align-self: start;
+      position: sticky;
+      top: 1rem;
+      padding: 1rem 0;
+      font: .88rem/1.5 var(--sans);
+    }
+
+    .contents h2 {
+      margin-bottom: .8rem;
+      font: 750 .75rem/1.2 var(--sans);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .contents ol {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .contents li { margin: .45rem 0; }
+
+    article { min-width: 0; }
+
+    section {
+      padding: 0 0 2.7rem;
+      margin: 0 0 2.6rem;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: 1rem;
+    }
+
+    section:last-child { border-bottom: 0; }
+
+    h2 {
+      margin-bottom: 1rem;
+      font-size: clamp(1.9rem, 4vw, 2.65rem);
+      letter-spacing: -.025em;
+    }
+
+    h3 {
+      margin: 1.8rem 0 .65rem;
+      font-size: 1.38rem;
+    }
+
+    .lede {
+      color: var(--ink-dim);
+      font-family: var(--serif);
+      font-size: 1.23rem;
+      line-height: 1.55;
+    }
+
+    .callout {
+      margin: 1.5rem 0;
+      padding: 1.1rem 1.25rem;
+      border: 1px solid rgba(247, 147, 26, .22);
+      border-left: 4px solid var(--amber);
+      border-radius: 0 8px 8px 0;
+      background: var(--gold-pale);
+    }
+
+    .callout strong { color: var(--gold); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1.3rem 0 .4rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      -webkit-overflow-scrolling: touch;
+      box-shadow: 0 20px 50px -35px rgba(0, 0, 0, .9);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font: .84rem/1.5 var(--sans);
+      line-height: 1.45;
+      font-variant-numeric: tabular-nums;
+    }
+
+    caption {
+      padding: .9rem 1rem;
+      color: var(--ink-dim);
+      font: 750 .76rem/1.4 var(--sans);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    th, td {
+      padding: .72rem .8rem;
+      border-top: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    thead th {
+      background: rgba(255, 255, 255, .035);
+      color: var(--ink-dim);
+      font-family: var(--sans);
+      font-size: .78rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(even) { background: rgba(255, 255, 255, .018); }
+    tbody tr:hover { background: rgba(255, 255, 255, .035); }
+    td { color: var(--ink-dim); }
+    .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .txid { overflow-wrap: anywhere; }
+    table.wide { min-width: 640px; }
+
+    .note {
+      color: var(--muted);
+      font-size: .87rem;
+      line-height: 1.55;
+      font-family: var(--sans);
+    }
+
+    .chart {
+      margin: 1.3rem 0;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: 0 20px 50px -35px rgba(0, 0, 0, .9);
+    }
+
+    .chart figcaption {
+      margin-bottom: 1rem;
+      color: var(--ink-dim);
+      font: 750 .76rem/1.4 var(--sans);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .bars {
+      display: grid;
+      gap: .55rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 3.2rem minmax(2rem, 1fr) 6.8rem;
+      align-items: center;
+      gap: .7rem;
+      font: .82rem/1.35 var(--sans);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-track {
+      display: flex;
+      height: 1rem;
+      overflow: hidden;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, .045);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04);
+    }
+
+    .bar-segment {
+      display: block;
+      height: 100%;
+      min-width: 1px;
+    }
+
+    .bar-emptied {
+      background: repeating-linear-gradient(135deg, #f7931a 0 6px, #c96f06 6px 9px);
+    }
+
+    .bar-residual {
+      background: repeating-linear-gradient(135deg, #9da6ff 0 4px, #555fae 4px 7px);
+    }
+
+    .bar-value { text-align: right; white-space: nowrap; }
+
+    .bar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem 1.2rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font: .8rem/1.4 var(--sans);
+    }
+
+    .bar-legend span { display: inline-flex; align-items: center; gap: .5rem; }
+
+    .legend-mark {
+      width: 1rem;
+      height: .8rem;
+      border: 1px solid rgba(255, 255, 255, .24);
+      border-radius: 2px;
+    }
+
+    .legend-mark.emptied {
+      background: repeating-linear-gradient(135deg, #f7931a 0 4px, #c96f06 4px 6px);
+    }
+
+    .legend-mark.residual {
+      background: repeating-linear-gradient(135deg, #9da6ff 0 3px, #555fae 3px 5px);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .cumulative-chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-width: 680px;
+      overflow: visible;
+      font-family: var(--sans);
+    }
+
+    .svg-scroll {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-grid { stroke: rgba(255, 255, 255, .12); stroke-width: 1; }
+    .chart-axis { fill: var(--muted); font-size: 11px; }
+    .chart-line {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .chart-point {
+      fill: var(--panel);
+      stroke: var(--amber-soft);
+      stroke-width: 2.5;
+    }
+
+    .chart-point-peak { fill: var(--amber); }
+
+    .chart-key {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin-top: .65rem;
+      color: var(--muted);
+      font: .8rem/1.4 var(--sans);
+    }
+
+    .chart-key-mark {
+      width: 1.2rem;
+      border-top: 3px solid var(--amber);
+      position: relative;
+    }
+
+    .chart-key-mark::after {
+      content: "";
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      top: -4px;
+      left: 7px;
+      border: 1px solid var(--amber-soft);
+      border-radius: 50%;
+      background: var(--panel);
+    }
+
+    .sources li { margin: .55rem 0; }
+
+    footer {
+      padding: 1.7rem 1.25rem;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: .84rem;
+      font-family: var(--sans);
+      text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout { grid-template-columns: 1fr; gap: 1rem; }
+      .contents { position: static; padding: 0 0 1rem; }
+      .contents ol { columns: 2; column-gap: 2rem; }
+    }
+
+    @media (max-width: 480px) {
+      body { font-size: 16px; }
+      .metrics { gap: .55rem; }
+      .metrics > div { min-height: 105px; padding: .8rem; }
+      .bar-row { grid-template-columns: 2.6rem minmax(1.5rem, 1fr); gap: .4rem .55rem; }
+      .bar-value { grid-column: 2; font-size: .74rem; }
+      .chart { padding: .8rem; }
+      .chart-axis { font-size: 12px; }
+      th, td { padding: .62rem .65rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    @media print {
+      :root {
+        color-scheme: light;
+        --ink: #111;
+        --ink-dim: #333;
+        --muted: #555;
+        --panel: #fff;
+        --panel-2: #f5f5f5;
+        --line: rgba(0, 0, 0, .18);
+        --line-strong: rgba(0, 0, 0, .3);
+        --amber: #b35c00;
+        --amber-soft: #8a4600;
+        --gold: #6b4a00;
+        --gold-pale: #fff4e0;
+      }
+      body { background: #fff; color: #111; }
+      .hero { background: none; }
+      .masthead, footer { background: #fff; color: #555; }
+      .metrics > div { background: #fff; }
+      thead th { background: rgba(0, 0, 0, .06); }
+      .chart, .table-wrap, .metrics > div { box-shadow: none; }
+      .contents { position: static; }
+    }
+  
+    .thesis {
+      max-width: 760px;
+      margin: 0 0 1.25rem;
+      padding: .2rem 0 .2rem 1rem;
+      border-left: 4px solid var(--amber);
+      color: var(--ink);
+      font-size: 1.12rem;
+      line-height: 1.55;
+    }
+    .thesis strong { color: var(--gold); }
+    .peel-diagram { display: block; width: 100%; height: auto; min-width: 600px; font-family: var(--sans); }
+    .pd-box { fill: var(--panel-2); stroke: var(--line-strong); stroke-width: 1.5; }
+    .pd-final { stroke: var(--amber); }
+    .pd-amount { fill: var(--ink); font: 700 20px var(--sans); }
+    .pd-sub { fill: var(--muted); font: 11px var(--sans); }
+    .pd-main-arrow { stroke: var(--amber); stroke-width: 3; marker-end: url(#pd-arrow); }
+    .pd-slice { stroke: var(--dust); stroke-width: 2; stroke-dasharray: 4 4; marker-end: url(#pd-arrow-slice); }
+    .pd-slice-box { fill: rgba(157, 166, 255, .1); stroke: var(--dust); stroke-width: 1.2; }
+    .pd-slice-text { fill: var(--dust); font: 700 14px var(--sans); }
+    article ul, article ol { padding-left: 1.3rem; }
+    article li { margin: .55rem 0; }
+    .callout ul { margin: .6rem 0 0; }
+    .disclosure { margin: 0 0 2rem; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+  
+    .hop-chart { display: block; width: 100%; height: auto; min-width: 760px; font-family: var(--sans); }
+    .hop-chart .chart-point { r: 3.5px; }
+    .hop-chart .hc-end { stroke: var(--dust); }
+    .hop-chart .hc-label { fill: var(--ink-dim); font: 700 12px var(--sans); }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#article">Skip to article</a>
+  <div class="masthead">Field Notes from the Digital Lost-and-Found</div>
+
+  <header class="hero">
+    <p class="eyebrow">A mystery of dormant wallets · November 2026 · Short version</p>
+    <h1>The Great Bitcoin Sleepover</h1>
+    <p class="deck">Thousands of supposedly forgotten Bitcoin wallets have been quietly doing what forgotten things do best: waiting. Some of them have started to wake up. An audit of 92,076 old addresses looks for the people behind them, and for what is revealed and what stays hidden when one wakes up.</p>
+    <p class="thesis"><strong>The thread through this piece:</strong> old coins can wake up, and when they do, the chain shows that someone could sign—but never who.</p>
+    <p class="byline">Main balance audit through 11 November 2026 · November movement review: 12–19 November 2026</p>
+
+    <dl class="metrics" aria-label="Key figures"><div><dt>92,076</dt><dd>old addresses in the audit</dd></div><div><dt>2.26 million BTC</dt><dd>still in addresses that never spent</dd></div><div><dt>9,990</dt><dd>addresses that later made a spend</dd></div></dl>
+  </header>
+
+  <div class="layout">
+    <nav class="contents" aria-label="Article contents">
+      <h2>In this article</h2>
+      <ol><li><a href="#question">A lock without a key</a></li><li><a href="#audit">What woke up</a></li><li><a href="#wakeups">The big wake-ups</a></li><li><a href="#november">November: the peel chain</a></li><li><a href="#cant-tell">What we can’t tell</a></li><li><a href="#sleeping">The ones still sleeping</a></li><li><a href="#lawsuit">The court case</a></li><li><a href="#key-search">The hunt for the key</a></li></ol>
+    </nav>
+
+    <article id="article">
+
+<section id="question">
+<h2>A lock without a key</h2>
+<p class="lede">A Bitcoin address is rather like a door in a very large city. The blockchain can tell you where the door is, how long it has been shut, and sometimes what is piled up behind it. What it cannot tell you is who has the key—or whether the key is at the bottom of a drawer, in a landfill, or being used as a bookmark.</p>
+<p>In March 2026 a New York lawsuit asked a court to hand <strong>39,069 dormant addresses</strong>, about 3.8 million BTC, to a pseudonymous plaintiff, without a single private key. Which raises an awkward question: <strong>who owns a Bitcoin nobody can move?</strong></p>
+<h3>The audit</h3>
+<p>In 2018 I built an app that treated any address with no outgoing transaction for six-plus years as probably lost. The market had given owners plenty of reasons to come back: bitcoin went from about <strong>$5</strong> in early 2012 to about <strong>$20,000</strong> at the December 2017 peak. If dormancy really meant “lost”, nearly every address on the list should still be silent.</p>
+<p>Eight years later I rechecked the preserved list: <strong>92,076 legacy addresses</strong>, each silent for more than six years back then, together holding <strong>2,530,552 BTC</strong>. That is more than one bitcoin in every eight ever mined.</p>
+<p>The result was not quite what the theory predicted.</p>
+</section>
+
+<section id="audit">
+<h2>What woke up</h2>
+<p><strong>82,086 addresses (89.2%) have still never spent</strong> and hold 2,256,802.64 BTC. Whether that is abandonment or a very deliberate investment strategy, the blockchain cannot say.</p>
+<p><strong>9,990 addresses (10.8%) did spend.</strong> But the big balances mostly stayed put: about 245,000 BTC left, only 9.7% of the list’s value. A spend proves that somebody could produce a valid signature. It does not prove the original owner was the one signing.</p>
+<p>Outflows were fairly steady for seven years, at roughly 11,000–32,000 BTC a year. Then came 2025: <strong>95,845 BTC left</strong>, and 87,240 of it came from just 60 addresses. As the next section shows, the July transfers alone moved 80,009 BTC.</p>
+</section>
+
+<section id="wakeups">
+<h2>The big wake-ups</h2>
+<p>These coins were old. The 2024 and 2025 transfers had waited <strong>13 to 14.5 years</strong>; earlier ones mostly sat for seven or eight.</p>
+<p>On <strong>4 July 2025</strong>, eight addresses holding about 10,000 BTC each sent out <strong>80,009 BTC</strong> over eleven hours, after 14.2 years of silence. On 25 July, Galaxy Digital announced it had sold more than 80,000 BTC (over $9 billion) for a “Satoshi-era investor”, and CoinDesk linked the two. Galaxy never named the addresses, so the chain alone cannot say who was behind the transfers.</p>
+<p>On <strong>26 March 2024</strong>, thirty-four wallets holding exactly 50 BTC, the 2010 block reward, were emptied in a single transaction after about 13.5 years. Eight or more such wallets moved together on 24 separate days. That is not hundreds of independent decisions.</p>
+<p>On <strong>11 November 2022</strong>, seven identical 500 BTC wallets were drained on the day FTX filed for bankruptcy, after 11.3 years. The timing looks suspicious, but that is all it is. An heir, a custodian or someone who found a backup could move coins on any day.</p>
+</section>
+
+<section id="november">
+<h2>November: the peel chain</h2>
+<p>After the main audit closed on 11 November, a one-week review (12–19 November) caught <strong>19 more old addresses</strong> spending: <strong>241.4 BTC</strong> in total, after <strong>13.9 to 16.2 years</strong> of silence. All were funded between 2010 and 2012.</p>
+<p>Then the coins kept moving. They hopped from address to address in a pattern called a <strong>peel chain</strong>.</p>
+<h3>What is a peel chain?</h3>
+<p>Bitcoin coins are spent whole, like banknotes. If you pay for a coffee with a €500 note, you hand over the entire note and get change back. In Bitcoin the change goes to a <em>brand-new address</em> that your wallet creates for you.</p>
+<p>A peel chain is that, repeated again and again. Take a big pile. Send a small slice somewhere (the “peel”) and send the rest to a fresh address. At the next hop, do the same. The pile shrinks and the trail gets longer.</p>
+<figure class="chart">
+<figcaption>A peel chain: one traced path from the review</figcaption>
+<div class="svg-scroll" role="region" aria-label="Peel chain diagram" tabindex="0">
+<svg class="peel-diagram" viewBox="0 0 760 190" role="img" aria-labelledby="peel-title peel-desc">
+<title id="peel-title">A peel chain</title>
+<desc id="peel-desc">A pile of about 25 BTC hops through four fresh addresses, shrinking to 20, 14, 7 and 3 BTC as a slice goes elsewhere at each hop.</desc>
+<defs><marker id="pd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--amber)"/></marker><marker id="pd-arrow-slice" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--dust)"/></marker></defs>
+<rect class="pd-box" x="0" y="20" width="112" height="60" rx="10"/>
+<text class="pd-amount" x="56" y="49" text-anchor="middle">25 BTC</text>
+<text class="pd-sub" x="56" y="68" text-anchor="middle">address 1</text>
+<rect class="pd-box" x="162" y="20" width="112" height="60" rx="10"/>
+<text class="pd-amount" x="218" y="49" text-anchor="middle">20 BTC</text>
+<text class="pd-sub" x="218" y="68" text-anchor="middle">address 2</text>
+<rect class="pd-box" x="324" y="20" width="112" height="60" rx="10"/>
+<text class="pd-amount" x="380" y="49" text-anchor="middle">14 BTC</text>
+<text class="pd-sub" x="380" y="68" text-anchor="middle">address 3</text>
+<rect class="pd-box" x="486" y="20" width="112" height="60" rx="10"/>
+<text class="pd-amount" x="542" y="49" text-anchor="middle">7 BTC</text>
+<text class="pd-sub" x="542" y="68" text-anchor="middle">address 4</text>
+<rect class="pd-box pd-final" x="648" y="20" width="112" height="60" rx="10"/>
+<text class="pd-amount" x="704" y="49" text-anchor="middle">3 BTC</text>
+<text class="pd-sub" x="704" y="68" text-anchor="middle">address 5</text>
+<line class="pd-main-arrow" x1="116" y1="50" x2="158" y2="50"/>
+<line class="pd-main-arrow" x1="278" y1="50" x2="320" y2="50"/>
+<line class="pd-main-arrow" x1="440" y1="50" x2="482" y2="50"/>
+<line class="pd-main-arrow" x1="602" y1="50" x2="644" y2="50"/>
+<line class="pd-slice" x1="137" y1="50" x2="137" y2="116"/>
+<rect class="pd-slice-box" x="92" y="120" width="90" height="48" rx="8"/>
+<text class="pd-slice-text" x="137" y="142" text-anchor="middle">−5 BTC</text>
+<text class="pd-sub" x="137" y="158" text-anchor="middle">went elsewhere</text>
+<line class="pd-slice" x1="299" y1="50" x2="299" y2="116"/>
+<rect class="pd-slice-box" x="254" y="120" width="90" height="48" rx="8"/>
+<text class="pd-slice-text" x="299" y="142" text-anchor="middle">−6 BTC</text>
+<text class="pd-sub" x="299" y="158" text-anchor="middle">went elsewhere</text>
+<line class="pd-slice" x1="461" y1="50" x2="461" y2="116"/>
+<rect class="pd-slice-box" x="416" y="120" width="90" height="48" rx="8"/>
+<text class="pd-slice-text" x="461" y="142" text-anchor="middle">−7 BTC</text>
+<text class="pd-sub" x="461" y="158" text-anchor="middle">went elsewhere</text>
+<line class="pd-slice" x1="623" y1="50" x2="623" y2="116"/>
+<rect class="pd-slice-box" x="578" y="120" width="90" height="48" rx="8"/>
+<text class="pd-slice-text" x="623" y="142" text-anchor="middle">−4 BTC</text>
+<text class="pd-sub" x="623" y="158" text-anchor="middle">went elsewhere</text>
+</svg></div>
+<p class="note" style="margin:.8rem 0 0">Rounded amounts. The review cannot show where each slice went. Tracing follows the largest output at each step, which is a guess about which output is the change, so any single hop could be wrong.</p>
+</figure>
+<figure class="chart">
+<figcaption>A real path: the longest traced chain, on a log scale</figcaption>
+<div class="svg-scroll" role="region" aria-label="Amount at each transfer, log scale" tabindex="0">
+<svg class="hop-chart" viewBox="0 0 920 280" role="img" aria-labelledby="hop-title hop-desc">
+<title id="hop-title">Amount carried at each transfer on the longest traced path</title>
+<desc id="hop-desc">On a log scale, the amount starts around 4 BTC and shrinks to about 1.43 BTC, then jumps to hundreds and thousands of BTC when the trail enters a large shared wallet, peaking near 2,461 BTC.</desc>
+<line class="chart-grid" x1="62" y1="230.0" x2="896" y2="230.0"/>
+<text class="chart-axis" x="54" y="234.0" text-anchor="end">1</text>
+<line class="chart-grid" x1="62" y1="172.9" x2="896" y2="172.9"/>
+<text class="chart-axis" x="54" y="176.9" text-anchor="end">10</text>
+<line class="chart-grid" x1="62" y1="115.7" x2="896" y2="115.7"/>
+<text class="chart-axis" x="54" y="119.7" text-anchor="end">100</text>
+<line class="chart-grid" x1="62" y1="58.6" x2="896" y2="58.6"/>
+<text class="chart-axis" x="54" y="62.6" text-anchor="end">1,000</text>
+<polyline class="chart-line" points="62.0,195.6 92.9,196.9 123.8,196.9 154.7,213.4 185.6,213.4 216.4,221.1 247.3,221.1 278.2,81.2 309.1,84.2 340.0,93.6 370.9,99.0 401.8,102.1 432.7,117.8 463.6,79.4 494.4,88.4 525.3,76.5 556.2,77.5 587.1,50.2 618.0,53.8 648.9,36.2 679.8,52.3 710.7,57.7 741.6,69.3 772.4,69.3 803.3,63.6 834.2,63.6 865.1,75.8 896.0,87.3"/>
+<circle class="chart-point" cx="62.0" cy="195.6" r="3.5"/>
+<circle class="chart-point" cx="92.9" cy="196.9" r="3.5"/>
+<circle class="chart-point" cx="123.8" cy="196.9" r="3.5"/>
+<circle class="chart-point" cx="154.7" cy="213.4" r="3.5"/>
+<circle class="chart-point" cx="185.6" cy="213.4" r="3.5"/>
+<circle class="chart-point" cx="216.4" cy="221.1" r="3.5"/>
+<circle class="chart-point" cx="247.3" cy="221.1" r="3.5"/>
+<circle class="chart-point" cx="278.2" cy="81.2" r="3.5"/>
+<circle class="chart-point" cx="309.1" cy="84.2" r="3.5"/>
+<circle class="chart-point" cx="340.0" cy="93.6" r="3.5"/>
+<circle class="chart-point" cx="370.9" cy="99.0" r="3.5"/>
+<circle class="chart-point" cx="401.8" cy="102.1" r="3.5"/>
+<circle class="chart-point" cx="432.7" cy="117.8" r="3.5"/>
+<circle class="chart-point" cx="463.6" cy="79.4" r="3.5"/>
+<circle class="chart-point" cx="494.4" cy="88.4" r="3.5"/>
+<circle class="chart-point" cx="525.3" cy="76.5" r="3.5"/>
+<circle class="chart-point" cx="556.2" cy="77.5" r="3.5"/>
+<circle class="chart-point" cx="587.1" cy="50.2" r="3.5"/>
+<circle class="chart-point" cx="618.0" cy="53.8" r="3.5"/>
+<circle class="chart-point chart-point-peak" cx="648.9" cy="36.2" r="3.5"/>
+<circle class="chart-point" cx="679.8" cy="52.3" r="3.5"/>
+<circle class="chart-point" cx="710.7" cy="57.7" r="3.5"/>
+<circle class="chart-point" cx="741.6" cy="69.3" r="3.5"/>
+<circle class="chart-point" cx="772.4" cy="69.3" r="3.5"/>
+<circle class="chart-point" cx="803.3" cy="63.6" r="3.5"/>
+<circle class="chart-point" cx="834.2" cy="63.6" r="3.5"/>
+<circle class="chart-point" cx="865.1" cy="75.8" r="3.5"/>
+<circle class="chart-point hc-end" cx="896.0" cy="87.3" r="3.5"/>
+<text class="hc-label" x="268.2" y="85.2" text-anchor="end">enters a large wallet</text>
+<text class="hc-label" x="648.9" y="27.2" text-anchor="middle">2,461 BTC</text>
+<text class="chart-axis" x="62" y="262">start of path</text>
+<text class="chart-axis" x="896" y="262" text-anchor="end">end of path (28 transfers)</text>
+</svg></div>
+<p class="note" style="margin:.8rem 0 0">The amount carried at each of the 28 transfers (values approximate). The first hops shrink like a peel chain. Then the trail enters a large shared wallet and the traced amount jumps to hundreds and thousands of BTC, which is mostly other people’s money. After that point the chain can no longer be followed to a single owner.</p>
+</figure>
+<h3>How it could hide who the owner is</h3>
+<p class="note"><strong>Background, not a finding.</strong> This is how peel chains are generally used. The review did not find evidence that anyone was hiding.</p>
+<p>A peel chain does not make coins invisible, because the blockchain is public. But it can make the owner hard to find. Here are the reasons someone might use one:</p>
+<ol><li>Every hop is a new address, so the last one looks unrelated to the first unless you walk the whole chain. That is tedious for a human.</li><li>Nothing on-chain says which output of a transaction is the payment and which is the change. Analysts guess, usually that the biggest output is the change, which is how I traced these paths. A chain built to look odd can send that guess down the wrong branch.</li><li>The main trail often ends up in a big exchange or broker wallet, where it mixes with thousands of other customers’ coins. In the reviewed paths, <strong>91 of 134 steps</strong> came after such a jump, when the traced amount suddenly swelled to thousands of BTC that were obviously not the original holder’s. Past that point the trail is mud.</li></ol>
+<p>Cashing out slice by slice also avoids one giant, attention-grabbing sale.</p>
+<p class="note">The same pattern also appears innocently: wallets create change outputs all the time, and services batch payments (125 of the 134 transactions had more than one output). And a chain that ends at a regulated exchange can still lead investigators to a name.</p>
+<h3>Why dormant coins are ideal for this</h3>
+<p>If you wanted to move coins without being identified, the best coins to hold are the ones nobody has looked at in fifteen years.</p>
+<p>Start with the missing paper trail. Coins from 2010–2012 were often mined directly or bought before ID-checked exchanges existed, so there is no account, email or verification record tying the address to a person. The public clustering data I checked found no real-world identity for any source or final address.</p>
+<p>There are no habits to match either. Active wallets leave fingerprints: the same exchange, similar amounts, similar timing. An address silent for 14 years has no history to compare against, so its first move is the first clue anyone gets.</p>
+<p>And the key-holder could be anyone: the original miner, a buyer, an heir, a custodian, someone who found an old backup, or a thief. Having the key tells you someone can spend the coins. It tells you nothing about who they are. After this long, “who are you?” is a question the chain cannot answer.</p>
+<div class="callout">
+<strong>Waking up is loud.</strong> Trackers watch these addresses, and the move is public within minutes. What a peel chain could protect is the identity of whoever moved the coins, and where they ended up.
+</div>
+</section>
+
+<section id="cant-tell">
+<h2>What we can’t tell</h2>
+<div class="callout">
+<strong>What the chain does not say:</strong>
+<ul><li><strong>Who signed.</strong> The signature shows that someone had the key, not who they are.</li><li><strong>Why the coins moved.</strong> A holder tidying old funds, a custodian migrating wallets, an heir, a thief, or someone hiding. The data fits all of them.</li><li><strong>Whether the coins are still the original owner’s.</strong> Holding a key and owning the coins are different questions.</li></ul>
+</div>
+</section>
+
+<section id="sleeping">
+<h2>The ones still sleeping</h2>
+<p><strong>94 addresses still hold 1,000 BTC or more</strong>, 344,864 BTC between them. The largest, <code>1FeexV6…</code>, holds 79,957 BTC untouched since March 2011. It is also “John Doe #1” in the New York case: the address Galaxy Research identifies as holding coins stolen from Mt. Gox. Long dormancy is evidence of inactivity, not proof that nobody has the key.</p>
+</section>
+
+<section id="lawsuit">
+<h2>The court case</h2>
+<p>The suit rests on a lost-property theory. In May 2026, with court permission, the plaintiffs sent <strong>546-satoshi payments</strong> with an attached legal notice to the addresses, though many wallets do not even display such messages. The case is pending, and nothing here is a legal finding.</p>
+<p>Dormancy is not abandonment: about one address in nine on our list eventually spent something. The list is also awkward. It includes the Mt. Gox hacker address, a Counterparty burn address nobody ever owned, and about 21,923 addresses associated with Satoshi. And a judgment is not a key. Even a total victory yields a paper declaration, not the signature needed to move a coin.</p>
+<div class="callout">
+<strong>The numbers do not sit comfortably together.</strong> The legal lever is a provision for property worth under $10, yet 39,046 of the 39,069 addresses are worth far more. The median holds about 50 BTC, roughly $3.86 million.
+</div>
+<p class="note">We are not lawyers; this is research, not legal advice.</p>
+</section>
+
+<section id="key-search">
+<h2>The hunt for the key</h2>
+<p class="note">Given the disclosure above, read this section skeptically: nothing here suggests a key will turn up.</p>
+<p>The court may decide who has a claim, but the blockchain still wants a signature. So what if the key was not destroyed, just misplaced?</p>
+<p>If every key were perfectly random, the answer would be no. Matching one specific legacy address is about a <strong>1 in 2<sup>160</sup></strong> shot, roughly 1 in 10<sup>48</sup>. At a billion guesses a second, that is on the order of 10<sup>31</sup> years.</p>
+<p>The only hope is that some keys are not random: flawed generators, weak phrases, reuse. Those live in a much smaller region, and searching it is not breaking Bitcoin. But most searches will find nothing, and a dormant address is no easier to guess than any other.</p>
+<div class="callout">
+<strong>And if you find a key, are the coins yours?</strong> Not necessarily. Holding a key and legally owning the coins are different questions, as the New York case demonstrates.
+</div>
+<p>The question still remains: how many of these addresses are truly lost? And how long must a Bitcoin address stay dormant before it can finally be pronounced lost—forever?</p>
+</section>
+
+<section id="sources">
+<h2>Sources</h2>
+<ul class="sources"><li>Galaxy Research, “‘Salomon Brothers’ Client Sues to Claim Legal Ownership of Satoshi's Coins,” 27 May 2026. <a href="https://www.galaxy.com/insights/research/satoshi-bitcoin-salomon-brothers-patoshi-abandoned-property-new-york-noah-doe-lawsuit">galaxy.com</a></li><li>Baker McKenzie, “The ‘Lost Bitcoin’ Litigation,” 10 June 2026. <a href="https://blockchain.bakermckenzie.com/2026/06/10/the-lost-bitcoin-litigation-can-dormant-wallets-such-as-those-belonging-to-satoshi-be-claimed-as-abandoned-property-in-new-york">blockchain.bakermckenzie.com</a></li><li>CoinDesk, “Galaxy Confirms Sale of 80,000 Satoshi-Era Bitcoins,” 25 July 2025. <a href="https://www.coindesk.com/markets/2025/07/25/bitcoin-rebounds-after-galaxy-completes-sale-of-usd9b-btc-from-satoshi-era-whale">coindesk.com</a></li><li>BitcoinWiki, “1FeexV6… Bitcoin address,” accessed 14 November 2026. <a href="https://bitcoinwiki.org/wiki/1feexv6bahb8ybzjqqmjjrccrhgw9sb6uf-discovering-the-private-key">bitcoinwiki.org</a></li></ul>
+</section>
+
+<p class="note"><a href="https://raw.githubusercontent.com/quickben22/bitcoinlotto-2/master/docs/address-audit.csv">Download the address audit data (CSV)</a></p>
+    </article>
+  </div>
+
+  <footer>
+    Main balance audit through 11 November 2026 · November movement review: 12–19 November 2026 · Not legal advice
+  </footer>
+</body>
+</html>

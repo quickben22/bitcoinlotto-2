@@ -16,6 +16,9 @@ build/
 *.aab
 *.log
 
+# Firebase CLI cache
+/.firebase/
+
 # Signing material — never commit keys, keystores, or certificates
 *.keystore
 *.jks
